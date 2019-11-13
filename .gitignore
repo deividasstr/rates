@@ -11,5 +11,6 @@
 /build
 /app/build
 /captures
+/buildSrc/build
 .externalNativeBuild
 .cxx
