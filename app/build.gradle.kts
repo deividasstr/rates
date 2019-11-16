@@ -20,9 +20,13 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
         }
     }
+    sourceSets["main"].java.srcDir("src/main/kotlin")
+    sourceSets["test"].java.srcDir("src/test/kotlin")
+    sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")
 }
 
 dependencies {
     implementation(Dependencies.Libraries.kotlinStdLib)
     implementation(Dependencies.Libraries.androidxAppcompat)
+    implementation(Dependencies.Libraries.material)
 }
