@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     kotlin("android")
+    kotlin("kapt")
 }
 
 android {
@@ -27,6 +28,17 @@ android {
 
 dependencies {
     implementation(Dependencies.Libraries.kotlinStdLib)
-    implementation(Dependencies.Libraries.androidxAppcompat)
+    implementation(Dependencies.Libraries.ktx)
     implementation(Dependencies.Libraries.material)
+    implementation(Dependencies.Libraries.ticker)
+    implementation(Dependencies.Libraries.adapterDelegates)
+
+    //TODO: find libs handling currency parsing, currency names and country flags
+
+    implementLifecycle()
+    implementCoroutines()
+    implementJsonParsing()
+    implementNetworking()
+    implementDb()
+    implementDi()
 }
