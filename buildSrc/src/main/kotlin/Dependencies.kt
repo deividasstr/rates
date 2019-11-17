@@ -20,6 +20,10 @@ object Dependencies {
         const val koin = "2.0.1"
         const val constraintLayout = "2.0.0-beta3"
         const val loggingInterceptor = "4.2.1"
+        const val junit = "4.12"
+        const val mockk = "1.9.3"
+        const val kluent = "1.57"
+        const val timber = "4.7.1"
     }
 
     object Libraries {
@@ -70,6 +74,11 @@ object Dependencies {
         const val koinAndroidxScope = "org.koin:koin-androidx-scope:${Versions.koin}"
         const val koinAndroidxViewmodel = "org.koin:koin-androidx-viewmodel:${Versions.koin}"
         const val koinAndroidxExt = "org.koin:koin-androidx-ext:${Versions.koin}"
+
+        const val junit = "junit:junit:${Versions.junit}"
+        const val kluent = "org.amshove.kluent:kluent-android:${Versions.kluent}"
+        const val mockk = "io.mockk:mockk:${Versions.mockk}"
+        const val timber = "com.jakewharton.timber:timber:${Versions.timber}"
     }
 }
 
@@ -113,4 +122,10 @@ fun DependencyHandler.implementDi() {
     add("implementation", Dependencies.Libraries.koinAndroidxViewmodel)
     add("implementation", Dependencies.Libraries.koinAndroidxExt)
     add("testImplementation", Dependencies.Libraries.koinTest)
+}
+
+fun DependencyHandler.implementTest() {
+    add("testImplementation", Dependencies.Libraries.junit)
+    add("testImplementation", Dependencies.Libraries.kluent)
+    add("testImplementation", Dependencies.Libraries.mockk)
 }

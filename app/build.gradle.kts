@@ -36,6 +36,8 @@ dependencies {
     implementation(Dependencies.Libraries.ticker)
     implementation(Dependencies.Libraries.adapterDelegates)
 
+    implementation(Dependencies.Libraries.timber)
+
     //TODO: find libs handling currency parsing, currency names and country flags
 
     implementLifecycle()
@@ -44,4 +46,6 @@ dependencies {
     implementNetworking()
     implementDb()
     implementDi()
+
+    implementTest()
 }

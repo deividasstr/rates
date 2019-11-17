@@ -12,7 +12,7 @@ class App : Application() {
 
         startKoin {
             androidContext(this@App)
-            modules(KoinModules.get())
+            modules(KoinModules.get(BuildConfig.baseUrl))
         }
     }
 }

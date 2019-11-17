@@ -26,9 +26,9 @@ tasks.withType(Test::class.java) {
         events = setOf(
             TestLogEvent.FAILED,
             TestLogEvent.PASSED,
-            TestLogEvent.SKIPPED
-            /*TestLogEvent.STANDARD_ERROR,
-            TestLogEvent.STANDARD_OUT*/)
+            TestLogEvent.SKIPPED,
+            TestLogEvent.STANDARD_ERROR,
+            TestLogEvent.STANDARD_OUT)
         exceptionFormat = TestExceptionFormat.FULL
         showCauses = true
         showExceptions = true
