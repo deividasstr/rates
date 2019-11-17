@@ -19,6 +19,7 @@ object Dependencies {
         const val adapterDelegates = "4.2.0"
         const val koin = "2.0.1"
         const val constraintLayout = "2.0.0-beta3"
+        const val loggingInterceptor = "4.2.1"
     }
 
     object Libraries {
@@ -37,6 +38,7 @@ object Dependencies {
                 Versions.retrofitCoroutinesAdapter
         const val mockWebServer = "com.squareup.okhttp3:mockwebserver:${Versions.mockWebServer}"
         const val moshiRetrofitAdapter = "com.squareup.retrofit2:converter-moshi:${Versions.retrofit}"
+        const val loggingInterceptor = "com.squareup.okhttp3:logging-interceptor:${Versions.loggingInterceptor}"
 
         const val moshi = "com.squareup.moshi:moshi:${Versions.moshi}"
         const val moshiKotlin = "com.squareup.moshi:moshi-kotlin:${Versions.moshi}"
@@ -74,8 +76,9 @@ object Dependencies {
 fun DependencyHandler.implementNetworking() {
     add("implementation", Dependencies.Libraries.retrofit)
     add("implementation", Dependencies.Libraries.retrofitCoroutinesAdapter)
-    add("implementation", Dependencies.Libraries.mockWebServer)
-    add("testImplementation", Dependencies.Libraries.moshiRetrofitAdapter)
+    add("implementation", Dependencies.Libraries.loggingInterceptor)
+    add("implementation", Dependencies.Libraries.moshiRetrofitAdapter)
+    add("testImplementation", Dependencies.Libraries.mockWebServer)
 }
 
 fun DependencyHandler.implementJsonParsing() {
