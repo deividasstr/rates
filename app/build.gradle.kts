@@ -30,6 +30,7 @@ dependencies {
     implementation(Dependencies.Libraries.kotlinStdLib)
     implementation(Dependencies.Libraries.ktx)
     implementation(Dependencies.Libraries.material)
+    implementation(Dependencies.Libraries.constraintLayout)
     implementation(Dependencies.Libraries.ticker)
     implementation(Dependencies.Libraries.adapterDelegates)
 

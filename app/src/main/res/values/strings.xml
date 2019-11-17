@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">RevoRateLut</string>
+    <string name="rates_list_title">Rates</string>
 </resources>

@@ -18,6 +18,7 @@ object Dependencies {
         const val ticker = "2.0.2"
         const val adapterDelegates = "4.2.0"
         const val koin = "2.0.1"
+        const val constraintLayout = "2.0.0-beta3"
     }
 
     object Libraries {
@@ -28,6 +29,7 @@ object Dependencies {
         const val kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
         const val ktx = "androidx.core:core-ktx:${Versions.ktx}"
         const val material = "com.google.android.material:material:${Versions.material}"
+        const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
 
         const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
         const val retrofitCoroutinesAdapter =
@@ -39,7 +41,6 @@ object Dependencies {
         const val moshi = "com.squareup.moshi:moshi:${Versions.moshi}"
         const val moshiKotlin = "com.squareup.moshi:moshi-kotlin:${Versions.moshi}"
         const val moshiKotlinCodegen = "com.squareup.moshi:moshi-kotlin-codegen:${Versions.moshi}"
-        //kapt
 
         const val coroutinesCore =
             "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
@@ -50,12 +51,10 @@ object Dependencies {
 
         const val lifecycle = "androidx.lifecycle:lifecycle-extensions:${Versions.lifeCycle}"
         const val lifecycleCompiler = "androidx.lifecycle:lifecycle-compiler:${Versions.lifeCycle}"
-        //kapt
         const val lifecycleTest = "androidx.arch.core:core-testing:${Versions.lifeCycle}"
 
         const val room = "androidx.room:room-runtime:${Versions.room}"
         const val roomCompiler = "androidx.room:room-compiler:${Versions.room}"
-        //kapt
         const val roomCoroutines = "androidx.room:room-ktx:${Versions.room}"
         const val roomTest = "androidx.room:room-testing:${Versions.room}"
 
