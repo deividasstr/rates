@@ -1,7 +1,7 @@
 package com.deividasstr.revoratelut.data.network
 
 import CurrencyRatesTestResponse
-import com.deividasstr.revoratelut.TestData
+import TestData
 import com.deividasstr.revoratelut.di.KoinModules
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking

@@ -5,7 +5,7 @@ object Dependencies {
     private object Versions {
 
         const val kotlin = "1.3.50"
-        const val buildGradle = "3.6.0-beta03"
+        const val buildGradle = "3.6.0-beta04"
         const val material = "1.0.0"
         const val retrofit = "2.6.2"
         const val ktx = "1.0.1"
@@ -24,6 +24,7 @@ object Dependencies {
         const val mockk = "1.9.3"
         const val kluent = "1.57"
         const val timber = "4.7.1"
+        const val androidxTest = "1.2.0"
     }
 
     object Libraries {
@@ -34,15 +35,18 @@ object Dependencies {
         const val kotlinStdLib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Versions.kotlin}"
         const val ktx = "androidx.core:core-ktx:${Versions.ktx}"
         const val material = "com.google.android.material:material:${Versions.material}"
-        const val constraintLayout = "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
+        const val constraintLayout =
+            "androidx.constraintlayout:constraintlayout:${Versions.constraintLayout}"
 
         const val retrofit = "com.squareup.retrofit2:retrofit:${Versions.retrofit}"
         const val retrofitCoroutinesAdapter =
             "com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:" +
                 Versions.retrofitCoroutinesAdapter
         const val mockWebServer = "com.squareup.okhttp3:mockwebserver:${Versions.mockWebServer}"
-        const val moshiRetrofitAdapter = "com.squareup.retrofit2:converter-moshi:${Versions.retrofit}"
-        const val loggingInterceptor = "com.squareup.okhttp3:logging-interceptor:${Versions.loggingInterceptor}"
+        const val moshiRetrofitAdapter =
+            "com.squareup.retrofit2:converter-moshi:${Versions.retrofit}"
+        const val loggingInterceptor =
+            "com.squareup.okhttp3:logging-interceptor:${Versions.loggingInterceptor}"
 
         const val moshi = "com.squareup.moshi:moshi:${Versions.moshi}"
         const val moshiKotlin = "com.squareup.moshi:moshi-kotlin:${Versions.moshi}"
@@ -79,9 +83,14 @@ object Dependencies {
         const val kluent = "org.amshove.kluent:kluent-android:${Versions.kluent}"
         const val mockk = "io.mockk:mockk:${Versions.mockk}"
         const val timber = "com.jakewharton.timber:timber:${Versions.timber}"
+
+        const val androidTest = "androidx.test:core:${Versions.androidxTest}"
+        const val testRunner = "androidx.test:runner:${Versions.androidxTest}"
+        const val testRules = "androidx.test:rules:${Versions.androidxTest}"
     }
 }
 
+// When the project has more modules, definitely do not group implementation dependencies with test and androidTest ones
 fun DependencyHandler.implementNetworking() {
     add("implementation", Dependencies.Libraries.retrofit)
     add("implementation", Dependencies.Libraries.retrofitCoroutinesAdapter)
@@ -100,6 +109,7 @@ fun DependencyHandler.implementCoroutines() {
     add("implementation", Dependencies.Libraries.coroutinesCore)
     add("implementation", Dependencies.Libraries.coroutinesAndroid)
     add("testImplementation", Dependencies.Libraries.coroutinesTest)
+    add("androidTestImplementation", Dependencies.Libraries.coroutinesTest)
 }
 
 fun DependencyHandler.implementLifecycle() {
@@ -113,6 +123,7 @@ fun DependencyHandler.implementDb() {
     add("kapt", Dependencies.Libraries.roomCompiler)
     add("implementation", Dependencies.Libraries.roomCoroutines)
     add("testImplementation", Dependencies.Libraries.roomTest)
+    add("androidTestImplementation", Dependencies.Libraries.roomTest)
 }
 
 fun DependencyHandler.implementDi() {
@@ -128,4 +139,16 @@ fun DependencyHandler.implementTest() {
     add("testImplementation", Dependencies.Libraries.junit)
     add("testImplementation", Dependencies.Libraries.kluent)
     add("testImplementation", Dependencies.Libraries.mockk)
+
+    // https://stackoverflow.com/questions/56571764/android-where-did-applicationprovider-go
+    add("testImplementation", Dependencies.Libraries.androidTest)
+}
+
+fun DependencyHandler.implementAndroidTest() {
+    add("androidTestImplementation", Dependencies.Libraries.junit)
+    add("androidTestImplementation", Dependencies.Libraries.kluent)
+    add("androidTestImplementation", Dependencies.Libraries.mockk)
+    add("androidTestImplementation", Dependencies.Libraries.androidTest)
+    add("androidTestImplementation", Dependencies.Libraries.testRunner)
+    add("androidTestImplementation", Dependencies.Libraries.testRules)
 }

@@ -1,5 +1,3 @@
-package com.deividasstr.revoratelut
-
 import com.deividasstr.revoratelut.data.network.CurrencyRatesResponse
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRatio
@@ -56,5 +54,6 @@ object TestData {
         usd to usdRate
     )
 
-    val currencyRatesResponse = CurrencyRatesResponse("EUR", "2018-09-06", responseRatesMap)
+    val currencyRatesResponse = CurrencyRatesResponse("EUR", "2018-09-06",
+        responseRatesMap)
 }

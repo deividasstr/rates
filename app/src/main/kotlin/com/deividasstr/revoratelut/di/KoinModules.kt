@@ -1,7 +1,11 @@
 package com.deividasstr.revoratelut.di
 
+import android.content.Context
+import androidx.room.Room
 import com.deividasstr.revoratelut.BuildConfig
 import com.deividasstr.revoratelut.data.network.CurrencyRatesClient
+import com.deividasstr.revoratelut.data.storage.db.AppDb
+import com.deividasstr.revoratelut.data.storage.db.CurrencyRateDao
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -20,6 +24,11 @@ object KoinModules {
             single(named("baseUrl")) { baseUrl }
             single { retrofit(get(), get(named("baseUrl"))) }
             single { currencyRatesClient(get()) }
+        }
+
+        val dbModule = module {
+            single { roomDb(get()) }
+            single { currencyRatesDao(get()) }
         }
         return listOf(networkModule)
     }
@@ -61,5 +70,16 @@ object KoinModules {
 
     private fun currencyRatesClient(retrofit: Retrofit): CurrencyRatesClient {
         return retrofit.create(CurrencyRatesClient::class.java)
+    }
+
+    private fun roomDb(applicationContext: Context): AppDb {
+        return Room.databaseBuilder(
+            applicationContext,
+            AppDb::class.java, "app-db"
+        ).build()
+    }
+
+    private fun currencyRatesDao(db: AppDb): CurrencyRateDao {
+       return db.currencyRateDao()
     }
 }

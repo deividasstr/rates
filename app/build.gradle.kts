@@ -26,6 +26,8 @@ android {
     sourceSets["main"].java.srcDir("src/main/kotlin")
     sourceSets["test"].java.srcDir("src/test/kotlin")
     sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")
+    sourceSets["test"].java.srcDir("src/sharedTestDir/kotlin")
+    sourceSets["androidTest"].java.srcDir("src/sharedTestDir/kotlin")
 }
 
 dependencies {
@@ -48,4 +50,5 @@ dependencies {
     implementDi()
 
     implementTest()
+    implementAndroidTest()
 }

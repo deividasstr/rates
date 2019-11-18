@@ -1,6 +1,6 @@
 package com.deividasstr.revoratelut.data.network
 
-import com.deividasstr.revoratelut.TestData
+import TestData
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRatio
 import io.mockk.coEvery
