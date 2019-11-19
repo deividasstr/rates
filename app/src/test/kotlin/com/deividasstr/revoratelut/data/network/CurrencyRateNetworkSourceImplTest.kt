@@ -1,8 +1,7 @@
 package com.deividasstr.revoratelut.data.network
 
 import TestData
-import com.deividasstr.revoratelut.domain.Currency
-import com.deividasstr.revoratelut.domain.CurrencyWithRatio
+import com.deividasstr.revoratelut.domain.CurrencyWithRate
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,13 +22,13 @@ class CurrencyRateNetworkSourceImplTest {
     private val rateNetworkSource = CurrencyRateNetworkSourceImpl(currencyRatesClient)
 
     @Test
-    fun `when observing for 2 responses, should return correct`() = runBlockingTest {
+    fun `when observing for 2 distinct responses, should return 2 responses`() = runBlockingTest {
         val responseList = listOf(TestData.response, TestData.response2)
         coEvery { currencyRatesClient.getCurrentRates(any()) } returnsMany responseList
 
-        val results = mutableListOf<List<CurrencyWithRatio>>()
+        val results = mutableListOf<List<CurrencyWithRate>>()
 
-        rateNetworkSource.getCurrencyToRateFlow(Currency("EUR"))
+        rateNetworkSource.getCurrencyToRateFlow(TestData.eurCurrency)
             .take(2)
             .toCollection(results)
 
@@ -40,13 +39,27 @@ class CurrencyRateNetworkSourceImplTest {
     fun `when observing between 1 - 2 seconds, should return 2 responses`() = runBlockingTest {
         coEvery { currencyRatesClient.getCurrentRates(any()) } returns TestData.response
 
-        val results = mutableListOf<List<CurrencyWithRatio>>()
+        val results = mutableListOf<List<CurrencyWithRate>>()
 
         withTimeoutOrNull(1100) {
-            rateNetworkSource.getCurrencyToRateFlow(Currency("EUR"))
+            rateNetworkSource.getCurrencyToRateFlow(TestData.eurCurrency)
                 .toCollection(results)
         }
 
         results.size shouldEqualTo 2
+    }
+
+    @Test
+    fun `when observing less than 1 second, should return 1 response`() = runBlockingTest {
+        coEvery { currencyRatesClient.getCurrentRates(any()) } returns TestData.response
+
+        val results = mutableListOf<List<CurrencyWithRate>>()
+
+        withTimeoutOrNull(900) {
+            rateNetworkSource.getCurrencyToRateFlow(TestData.eurCurrency)
+                .toCollection(results)
+        }
+
+        results.size shouldEqualTo 1
     }
 }

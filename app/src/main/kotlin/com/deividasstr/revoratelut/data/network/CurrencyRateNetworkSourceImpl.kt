@@ -1,7 +1,7 @@
 package com.deividasstr.revoratelut.data.network
 
 import com.deividasstr.revoratelut.domain.Currency
-import com.deividasstr.revoratelut.domain.CurrencyWithRatio
+import com.deividasstr.revoratelut.domain.CurrencyWithRate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -11,7 +11,7 @@ class CurrencyRateNetworkSourceImpl(
     private val currencyRatesClient: CurrencyRatesClient
 ) : CurrencyRateNetworkSource {
 
-    override fun getCurrencyToRateFlow(baseCurrency: Currency): Flow<List<CurrencyWithRatio>> {
+    override fun getCurrencyToRateFlow(baseCurrency: Currency): Flow<List<CurrencyWithRate>> {
         val currencyCode = baseCurrency.currencyCode
         return flow {
             while (true) {
@@ -26,14 +26,14 @@ class CurrencyRateNetworkSourceImpl(
         }
     }
 
-    private fun CurrencyRatesResponse.toCurrencyWithRatioList(): List<CurrencyWithRatio> {
+    private fun CurrencyRatesResponse.toCurrencyWithRatioList(): List<CurrencyWithRate> {
         return rates.map(::rateMapToCurrencyWithRatioList)
     }
 
     private fun rateMapToCurrencyWithRatioList(currencyToRate: Map.Entry<String, Double>)
-        : CurrencyWithRatio {
+        : CurrencyWithRate {
         val currency = Currency(currencyToRate.key)
         val ratio = currencyToRate.value.toBigDecimal()
-        return CurrencyWithRatio(currency, ratio)
+        return CurrencyWithRate(currency, ratio)
     }
 }

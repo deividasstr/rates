@@ -1,6 +1,6 @@
 import com.deividasstr.revoratelut.data.network.CurrencyRatesResponse
 import com.deividasstr.revoratelut.domain.Currency
-import com.deividasstr.revoratelut.domain.CurrencyWithRatio
+import com.deividasstr.revoratelut.domain.CurrencyWithRate
 
 object TestData {
 
@@ -18,9 +18,9 @@ object TestData {
     const val gbpRate: Double = 0.89
     const val gbpRate2: Double = 0.88795
 
-    val eurWithRate = CurrencyWithRatio(eurCurrency, eurRate.toBigDecimal())
-    val usdWithRate = CurrencyWithRatio(usdCurrency, usdRate.toBigDecimal())
-    val gbpWithRate = CurrencyWithRatio(gbpCurrency, gbpRate.toBigDecimal())
+    val eurWithRate = CurrencyWithRate(eurCurrency, eurRate.toBigDecimal())
+    val usdWithRate = CurrencyWithRate(usdCurrency, usdRate.toBigDecimal())
+    val gbpWithRate = CurrencyWithRate(gbpCurrency, gbpRate.toBigDecimal())
 
     val currenciesToRates = mapOf(
         eur to eurRate,
@@ -38,15 +38,15 @@ object TestData {
     val response2 = CurrencyRatesResponse("", "", currenciesToRates2)
 
     val rates = listOf(
-        CurrencyWithRatio(eurCurrency, eurRate.toBigDecimal()),
-        CurrencyWithRatio(usdCurrency, usdRate.toBigDecimal()),
-        CurrencyWithRatio(gbpCurrency, gbpRate.toBigDecimal())
+        CurrencyWithRate(eurCurrency, eurRate.toBigDecimal()),
+        CurrencyWithRate(usdCurrency, usdRate.toBigDecimal()),
+        CurrencyWithRate(gbpCurrency, gbpRate.toBigDecimal())
     )
 
     val rates2 = listOf(
-        CurrencyWithRatio(eurCurrency, eurRate.toBigDecimal()),
-        CurrencyWithRatio(usdCurrency, usdRate2.toBigDecimal()),
-        CurrencyWithRatio(gbpCurrency, gbpRate2.toBigDecimal())
+        CurrencyWithRate(eurCurrency, eurRate.toBigDecimal()),
+        CurrencyWithRate(usdCurrency, usdRate2.toBigDecimal()),
+        CurrencyWithRate(gbpCurrency, gbpRate2.toBigDecimal())
     )
 
     private val responseRatesMap = mapOf(
