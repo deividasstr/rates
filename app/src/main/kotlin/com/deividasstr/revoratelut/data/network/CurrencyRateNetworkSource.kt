@@ -6,5 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface CurrencyRateNetworkSource {
 
-    fun getCurrencyToRateFlow(baseCurrency: Currency): Flow<List<CurrencyWithRate>>
+    fun getCurrencyRateFlow(baseCurrency: Currency):
+        Flow<NetworkResultWrapper<List<CurrencyWithRate>>>
 }

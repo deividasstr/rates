@@ -9,9 +9,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.test.runBlockingTest
-import kotlinx.coroutines.withTimeoutOrNull
 import org.amshove.kluent.shouldContainSame
-import org.amshove.kluent.shouldEqualTo
 import org.junit.Test
 
 @ObsoleteCoroutinesApi
@@ -26,40 +24,15 @@ class CurrencyRateNetworkSourceImplTest {
         val responseList = listOf(TestData.response, TestData.response2)
         coEvery { currencyRatesClient.getCurrentRates(any()) } returnsMany responseList
 
-        val results = mutableListOf<List<CurrencyWithRate>>()
+        val results = mutableListOf<NetworkResultWrapper<List<CurrencyWithRate>>>()
 
-        rateNetworkSource.getCurrencyToRateFlow(TestData.eurCurrency)
+        rateNetworkSource.getCurrencyRateFlow(TestData.eurCurrency)
             .take(2)
             .toCollection(results)
 
-        results shouldContainSame listOf(TestData.rates, TestData.rates2)
-    }
-
-    @Test
-    fun `when observing between 1 - 2 seconds, should return 2 responses`() = runBlockingTest {
-        coEvery { currencyRatesClient.getCurrentRates(any()) } returns TestData.response
-
-        val results = mutableListOf<List<CurrencyWithRate>>()
-
-        withTimeoutOrNull(1100) {
-            rateNetworkSource.getCurrencyToRateFlow(TestData.eurCurrency)
-                .toCollection(results)
-        }
-
-        results.size shouldEqualTo 2
-    }
-
-    @Test
-    fun `when observing less than 1 second, should return 1 response`() = runBlockingTest {
-        coEvery { currencyRatesClient.getCurrentRates(any()) } returns TestData.response
-
-        val results = mutableListOf<List<CurrencyWithRate>>()
-
-        withTimeoutOrNull(900) {
-            rateNetworkSource.getCurrencyToRateFlow(TestData.eurCurrency)
-                .toCollection(results)
-        }
-
-        results.size shouldEqualTo 1
+        results shouldContainSame listOf(
+            NetworkResultWrapper.Success(TestData.rates),
+            NetworkResultWrapper.Success(TestData.rates2)
+        )
     }
 }
