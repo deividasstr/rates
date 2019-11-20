@@ -4,7 +4,7 @@ object Dependencies {
 
     private object Versions {
 
-        const val kotlin = "1.3.50"
+        const val kotlin = "1.3.60"
         const val buildGradle = "3.6.0-beta04"
         const val material = "1.0.0"
         const val retrofit = "2.6.2"
