@@ -15,18 +15,20 @@ class CurrencyRateNetworkSourceImpl(
     private val currencyRatesClient: CurrencyRatesClient
 ) : CurrencyRateNetworkSource {
 
+    //TODO: combine with the flow of `is network connection available` to reduce request attempts
     override fun getCurrencyRatesFlow(
         baseCurrency: Currency
     ): Flow<NetworkResultWrapper<List<CurrencyWithRate>>> {
         val currencyCode = baseCurrency.currencyCode
         return periodicalFlowFrom(TimeUnit.SECONDS.toMillis(1)) {
             wrapNetworkSuccess(currencyRatesClient.getCurrentRates(currencyCode).toCurrencyWithRatioList())
-        }.retryWhen { throwable, _ ->
-            val handledValue: NetworkResultWrapper<List<CurrencyWithRate>> =
-                throwable.toNetworkResult()
-            emit(handledValue)
-            true
-        }
+        } // On exception emits error NetworkResult and retries
+            .retryWhen { throwable, _ ->
+                val handledValue: NetworkResultWrapper<List<CurrencyWithRate>> =
+                    throwable.toNetworkResult()
+                emit(handledValue)
+                true
+            }
     }
 
     private fun <T> wrapNetworkSuccess(value: T): NetworkResultWrapper<T> {
