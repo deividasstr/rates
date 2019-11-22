@@ -10,7 +10,6 @@ import com.deividasstr.revoratelut.utils.TestCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asExecutor
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runBlockingTest
 import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
@@ -50,7 +49,7 @@ class CurrencyRatesStorageImplTest {
 
     @Test
     fun whenDbIsEmpty_getAllReturnsEmptyList() = testCoroutine.testDispatcher.runBlockingTest {
-        val result = currencyRatesStorage.getCurrencyRatesFlow().first()
+        val result = currencyRatesStorage.getCurrencyRates()
         result shouldHaveSize 0
     }
 
@@ -58,7 +57,7 @@ class CurrencyRatesStorageImplTest {
     fun whenAddCurrencyRatings_getAllReturnsCurrencyRatings() =
         testCoroutine.testDispatcher.runBlockingTest {
             currencyRatesStorage.setCurrencyRates(TestData.rates)
-            val result = currencyRatesStorage.getCurrencyRatesFlow().first()
+            val result = currencyRatesStorage.getCurrencyRates()
             result shouldContainSame TestData.rates
         }
 
@@ -66,11 +65,11 @@ class CurrencyRatesStorageImplTest {
     fun whenNewCurrencyRatesSet_shouldOverrideOldOnes() =
         testCoroutine.testDispatcher.runBlockingTest {
             currencyRatesStorage.setCurrencyRates(TestData.rates)
-            val result = currencyRatesStorage.getCurrencyRatesFlow().first()
+            val result = currencyRatesStorage.getCurrencyRates()
             result shouldContainSame TestData.rates
 
             currencyRatesStorage.setCurrencyRates(TestData.rates2)
-            val result2 = currencyRatesStorage.getCurrencyRatesFlow().first()
+            val result2 = currencyRatesStorage.getCurrencyRates()
             result2 shouldContainSame TestData.rates2
         }
 
