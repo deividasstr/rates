@@ -6,7 +6,6 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.deividasstr.revoratelut.data.storage.db.AppDb
 import com.deividasstr.revoratelut.data.storage.db.CurrencyRateDao
-import com.deividasstr.revoratelut.utils.TestCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.asExecutor
@@ -17,6 +16,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import utils.TestCoroutineRule
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi

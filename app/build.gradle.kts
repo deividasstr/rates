@@ -37,10 +37,9 @@ dependencies {
     implementation(Dependencies.Libraries.constraintLayout)
     implementation(Dependencies.Libraries.ticker)
     implementation(Dependencies.Libraries.adapterDelegates)
+    implementation(Dependencies.Libraries.currencies)
 
     implementation(Dependencies.Libraries.timber)
-
-    //TODO: find libs handling currency parsing, currency names and country flags
 
     implementLifecycle()
     implementCoroutines()

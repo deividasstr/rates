@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">RevoRateLut</string>
     <string name="rates_list_title">Rates</string>
+    <string name="issue_network">Network issue, please make sure you have a stable network connection</string>
+    <string name="issue_generic">Service issue, please try again later</string>
 </resources>

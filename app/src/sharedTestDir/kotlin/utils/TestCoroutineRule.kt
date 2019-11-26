@@ -1,4 +1,4 @@
-package com.deividasstr.revoratelut.utils
+package utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

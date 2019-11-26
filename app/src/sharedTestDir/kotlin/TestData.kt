@@ -1,6 +1,10 @@
+import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.data.network.CurrencyRatesResponse
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
+import com.deividasstr.revoratelut.ui.ratelist.CurrencyRateModel
+import com.deividasstr.revoratelut.ui.ratelist.CurrencyRatesState
+import com.deividasstr.revoratelut.ui.utils.toArgedText
 
 object TestData {
 
@@ -38,9 +42,9 @@ object TestData {
     val response2 = CurrencyRatesResponse("", "", currenciesToRates2)
 
     val rates = listOf(
-        CurrencyWithRate(eurCurrency, eurRate.toBigDecimal()),
-        CurrencyWithRate(usdCurrency, usdRate.toBigDecimal()),
-        CurrencyWithRate(gbpCurrency, gbpRate.toBigDecimal())
+        eurWithRate,
+        usdWithRate,
+        gbpWithRate
     )
 
     val rates2 = listOf(
@@ -54,6 +58,47 @@ object TestData {
         usd to usdRate
     )
 
-    val currencyRatesResponse = CurrencyRatesResponse("EUR", "2018-09-06",
-        responseRatesMap)
+    val currencyRatesResponse = CurrencyRatesResponse(
+        "EUR",
+        "2018-09-06",
+        responseRatesMap
+    )
+
+    // Fragile test data - currency lib specific
+    val eurCurrencyRateModel =
+        CurrencyRateModel(
+            eurCurrency,
+            eurRate.toBigDecimal(),
+            "Euro",
+            R.drawable.flag_eur
+        )
+
+    val gbpCurrencyRateModel =
+        CurrencyRateModel(
+            gbpCurrency,
+            gbpRate.toBigDecimal(),
+            "British Pound",
+            R.drawable.flag_gbp
+        )
+
+    val usdCurrencyRateModel =
+        CurrencyRateModel(
+            usdCurrency,
+            usdRate.toBigDecimal(),
+            "United States Dollar",
+            R.drawable.flag_usd)
+
+    val currencyRatesModel = listOf(
+        eurCurrencyRateModel,
+        usdCurrencyRateModel,
+        gbpCurrencyRateModel
+    )
+
+    val currencyRatesAvailableFresh = CurrencyRatesState.Available(currencyRatesModel, false)
+
+    val currencyRatesAvailableStale = CurrencyRatesState.Available(
+        currencyRatesModel,
+        true,
+        R.string.issue_network.toArgedText()
+    )
 }

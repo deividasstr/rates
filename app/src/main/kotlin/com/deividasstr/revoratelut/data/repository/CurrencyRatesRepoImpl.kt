@@ -16,11 +16,12 @@ class CurrencyRatesRepoImpl(
     private val sharedPrefs: SharedPrefs
 ) : CurrencyRatesRepo {
 
-    override fun currencyRatesResultFlow(baseCurrency: Currency): Flow<CurrencyRatesResult> {
-        return currencyRatesNetworkSource.getCurrencyRatesFlow(baseCurrency)
+    override fun currencyRatesResultFlow(baseCurrency: Currency?): Flow<CurrencyRatesResult> {
+        val currency = baseCurrency ?: sharedPrefs.getLatestBaseCurrency()
+        return currencyRatesNetworkSource.getCurrencyRatesFlow(currency)
             .onEach {
                 if (it is NetworkResultWrapper.Success) {
-                    cacheLatestCurrencyRates(it, baseCurrency)
+                    cacheLatestCurrencyRates(it, currency)
                 }
             }
             .map(::networkCurrenciesToCurrencyRatesModel)

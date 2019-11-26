@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface CurrencyRatesRepo {
 
-    fun currencyRatesResultFlow(baseCurrency: Currency): Flow<CurrencyRatesResult>
+    fun currencyRatesResultFlow(baseCurrency: Currency? = null): Flow<CurrencyRatesResult>
 }

@@ -13,18 +13,21 @@ object Dependencies {
         const val mockWebServer = "4.2.2"
         const val moshi = "1.9.1"
         const val coroutines = "1.3.2"
+        const val lifeCycleRc = "2.2.0-rc02"
         const val lifeCycle = "2.1.0"
         const val room = "2.2.1"
         const val ticker = "2.0.2"
         const val adapterDelegates = "4.2.0"
         const val koin = "2.0.1"
         const val constraintLayout = "2.0.0-beta3"
+        const val currencies = "1.1.9"
         const val loggingInterceptor = "4.2.1"
         const val junit = "4.12"
-        const val mockk = "1.9.3"
+        const val mockk = "1.9.2"
         const val kluent = "1.57"
         const val timber = "4.7.1"
         const val androidxTest = "1.2.0"
+        const val liveDataTest = "1.1.1"
     }
 
     object Libraries {
@@ -59,9 +62,11 @@ object Dependencies {
         const val coroutinesTest =
             "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutines}"
 
-        const val lifecycle = "androidx.lifecycle:lifecycle-extensions:${Versions.lifeCycle}"
-        const val lifecycleCompiler = "androidx.lifecycle:lifecycle-compiler:${Versions.lifeCycle}"
+        const val lifecycle = "androidx.lifecycle:lifecycle-extensions:${Versions.lifeCycleRc}"
+        const val lifecycleLiveData = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifeCycleRc}"
+        const val lifecycleCompiler = "androidx.lifecycle:lifecycle-compiler:${Versions.lifeCycleRc}"
         const val lifecycleTest = "androidx.arch.core:core-testing:${Versions.lifeCycle}"
+        const val liveDataTest = "com.jraska.livedata:testing-ktx:${Versions.liveDataTest}"
 
         const val room = "androidx.room:room-runtime:${Versions.room}"
         const val roomCompiler = "androidx.room:room-compiler:${Versions.room}"
@@ -71,6 +76,8 @@ object Dependencies {
         const val ticker = "com.robinhood.ticker:ticker:${Versions.ticker}"
         const val adapterDelegates =
             "com.hannesdorfmann:adapterdelegates4-kotlin-dsl:${Versions.adapterDelegates}"
+        const val currencies =
+            "com.github.midorikocak:currency-picker-android:${Versions.currencies}"
 
         const val koin = "org.koin:koin-core:${Versions.koin}"
         const val koinExt = "org.koin:koin-core-ext:${Versions.koin}"
@@ -114,8 +121,10 @@ fun DependencyHandler.implementCoroutines() {
 
 fun DependencyHandler.implementLifecycle() {
     add("implementation", Dependencies.Libraries.lifecycle)
+    add("implementation", Dependencies.Libraries.lifecycleLiveData)
     add("kapt", Dependencies.Libraries.lifecycleCompiler)
     add("testImplementation", Dependencies.Libraries.lifecycleTest)
+    add("testImplementation", Dependencies.Libraries.liveDataTest)
 }
 
 fun DependencyHandler.implementDb() {
