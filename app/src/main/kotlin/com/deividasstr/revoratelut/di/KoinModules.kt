@@ -4,12 +4,19 @@ import android.content.Context
 import androidx.room.Room
 import com.deividasstr.revoratelut.BuildConfig
 import com.deividasstr.revoratelut.data.network.CurrencyRatesClient
+import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepo
+import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepoImpl
 import com.deividasstr.revoratelut.data.storage.db.AppDb
 import com.deividasstr.revoratelut.data.storage.db.CurrencyRateDao
+import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
+import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefsImpl
+import com.deividasstr.revoratelut.ui.ratelist.CurrencyRatesViewModel
+import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.module.Module
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
@@ -20,9 +27,9 @@ object KoinModules {
 
     fun get(baseUrl: String): List<Module> {
         val networkModule = module {
-            single { okHttp() }
+            factory { okHttp() }
             single(named("baseUrl")) { baseUrl }
-            single { retrofit(get(), get(named("baseUrl"))) }
+            factory { retrofit(get(), get(named("baseUrl"))) }
             single { currencyRatesClient(get()) }
         }
 
@@ -30,7 +37,29 @@ object KoinModules {
             single { roomDb(get()) }
             single { currencyRatesDao(get()) }
         }
-        return listOf(networkModule)
+
+        val currenciesModule = module {
+            single { CurrencyHelper() }
+        }
+
+        val repoModule = module {
+            factory<CurrencyRatesRepo> { CurrencyRatesRepoImpl(get(), get(), get()) }
+        }
+
+        val sharedPrefsModule = module {
+            single<SharedPrefs> { SharedPrefsImpl(get()) }
+        }
+
+        val ratesListModule = module {
+            viewModel { CurrencyRatesViewModel(get(), get()) }
+        }
+        return listOf(
+            networkModule,
+            dbModule,
+            ratesListModule,
+            currenciesModule,
+            repoModule,
+            sharedPrefsModule)
     }
 
     private fun retrofit(okHttpClient: OkHttpClient, baseUrl: String): Retrofit {
@@ -80,6 +109,6 @@ object KoinModules {
     }
 
     private fun currencyRatesDao(db: AppDb): CurrencyRateDao {
-       return db.currencyRateDao()
+        return db.currencyRateDao()
     }
 }
