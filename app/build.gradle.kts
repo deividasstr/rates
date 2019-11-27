@@ -23,6 +23,11 @@ android {
         }
     }
 
+    // Required by live data observation
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
     sourceSets["main"].java.srcDir("src/main/kotlin")
     sourceSets["test"].java.srcDir("src/test/kotlin")
     sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")

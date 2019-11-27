@@ -3,9 +3,13 @@ package com.deividasstr.revoratelut.di
 import android.content.Context
 import androidx.room.Room
 import com.deividasstr.revoratelut.BuildConfig
+import com.deividasstr.revoratelut.data.network.CurrencyRateNetworkSource
+import com.deividasstr.revoratelut.data.network.CurrencyRateNetworkSourceImpl
 import com.deividasstr.revoratelut.data.network.CurrencyRatesClient
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepo
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepoImpl
+import com.deividasstr.revoratelut.data.storage.CurrencyRatesStorage
+import com.deividasstr.revoratelut.data.storage.CurrencyRatesStorageImpl
 import com.deividasstr.revoratelut.data.storage.db.AppDb
 import com.deividasstr.revoratelut.data.storage.db.CurrencyRateDao
 import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
@@ -31,11 +35,13 @@ object KoinModules {
             single(named("baseUrl")) { baseUrl }
             factory { retrofit(get(), get(named("baseUrl"))) }
             single { currencyRatesClient(get()) }
+            single<CurrencyRateNetworkSource> { CurrencyRateNetworkSourceImpl(get()) }
         }
 
         val dbModule = module {
             single { roomDb(get()) }
             single { currencyRatesDao(get()) }
+            single<CurrencyRatesStorage> { CurrencyRatesStorageImpl(get()) }
         }
 
         val currenciesModule = module {

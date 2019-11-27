@@ -12,9 +12,12 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toCollection
 import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.withTimeoutOrNull
 import org.amshove.kluent.shouldContainSame
+import org.amshove.kluent.shouldHaveSize
 import org.junit.Test
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
@@ -85,4 +88,23 @@ class CurrencyRateNetworkSourceImplTest {
                 NetworkResultWrapper.Success(TestData.rates2)
             )
         }
+
+    @Test
+    fun `when failure happens, should retry in 1s`() =
+        runBlockingTest {
+            coEvery { currencyRatesClient.getCurrentRates(any()) } throws IOException()
+
+            val results =
+                mutableListOf<NetworkResultWrapper<List<CurrencyWithRate>>>()
+
+            withTimeoutOrNull(TimeUnit.SECONDS.toMillis(1) + bufferTime) {
+                rateNetworkSource.getCurrencyRatesFlow(TestData.eurCurrency)
+                    .toCollection(results)
+            }
+            results shouldHaveSize 2
+        }
+
+    companion object {
+        private const val bufferTime = 100
+    }
 }

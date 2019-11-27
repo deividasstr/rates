@@ -4,6 +4,7 @@ import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
 import com.deividasstr.revoratelut.extensions.periodicalFlowFrom
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.retryWhen
 import retrofit2.HttpException
@@ -27,6 +28,7 @@ class CurrencyRateNetworkSourceImpl(
                 val handledValue: NetworkResultWrapper<List<CurrencyWithRate>> =
                     throwable.toNetworkResult()
                 emit(handledValue)
+                delay(TimeUnit.SECONDS.toMillis(1)) // Retries can also be delayed
                 true
             }
     }
