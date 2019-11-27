@@ -1,5 +1,6 @@
 package com.deividasstr.revoratelut.ui.ratelist
 
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
 import com.deividasstr.revoratelut.ui.utils.ArgedText
 
 sealed class CurrencyRatesState {

@@ -16,7 +16,7 @@ object Dependencies {
         const val lifeCycleRc = "2.2.0-rc02"
         const val lifeCycle = "2.1.0"
         const val room = "2.2.1"
-        const val ticker = "2.0.2"
+        const val circularImageView = "3.0.1"
         const val adapterDelegates = "4.2.0"
         const val koin = "2.0.1"
         const val constraintLayout = "2.0.0-beta3"
@@ -73,7 +73,7 @@ object Dependencies {
         const val roomCoroutines = "androidx.room:room-ktx:${Versions.room}"
         const val roomTest = "androidx.room:room-testing:${Versions.room}"
 
-        const val ticker = "com.robinhood.ticker:ticker:${Versions.ticker}"
+        const val circularImageView = "de.hdodenhof:circleimageview:${Versions.circularImageView}"
         const val adapterDelegates =
             "com.hannesdorfmann:adapterdelegates4-kotlin-dsl:${Versions.adapterDelegates}"
         const val currencies =

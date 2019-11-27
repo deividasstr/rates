@@ -1,4 +1,4 @@
-package com.deividasstr.revoratelut.ui.ratelist
+package com.deividasstr.revoratelut.ui.ratelist.listitems
 
 import androidx.annotation.DrawableRes
 import com.deividasstr.revoratelut.domain.Currency
@@ -9,4 +9,7 @@ data class CurrencyRateModel(
     val rate: BigDecimal,
     val currencyName: String,
     @DrawableRes val currencyCountryPic: Int
-)
+): CurrencyRatesListItem {
+
+    override val id = currency.currencyCode
+}

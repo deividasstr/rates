@@ -2,7 +2,7 @@ import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.data.network.CurrencyRatesResponse
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
-import com.deividasstr.revoratelut.ui.ratelist.CurrencyRateModel
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
 import com.deividasstr.revoratelut.ui.ratelist.CurrencyRatesState
 import com.deividasstr.revoratelut.ui.utils.toArgedText
 

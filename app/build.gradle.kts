@@ -24,9 +24,9 @@ android {
     }
 
     // Required by live data observation
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
+    kotlinOptions.jvmTarget = "1.8"
+
+    viewBinding.isEnabled = true
 
     sourceSets["main"].java.srcDir("src/main/kotlin")
     sourceSets["test"].java.srcDir("src/test/kotlin")
@@ -40,7 +40,7 @@ dependencies {
     implementation(Dependencies.Libraries.ktx)
     implementation(Dependencies.Libraries.material)
     implementation(Dependencies.Libraries.constraintLayout)
-    implementation(Dependencies.Libraries.ticker)
+    implementation(Dependencies.Libraries.circularImageView)
     implementation(Dependencies.Libraries.adapterDelegates)
     implementation(Dependencies.Libraries.currencies)
 

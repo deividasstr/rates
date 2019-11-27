@@ -8,6 +8,7 @@ import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepo
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesResult
 import com.deividasstr.revoratelut.data.repository.RemoteFailure
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
 import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.deividasstr.revoratelut.ui.utils.toArgedText
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ class CurrencyRatesViewModel(
     fun currencyRatesLive(): LiveData<CurrencyRatesState> = currencyRatesRepo
         .currencyRatesResultFlow()
         .distinctUntilChanged()
-        .map(this::resultToState)
+        .map(::resultToState)
         .asLiveData(Dispatchers.IO)
 
     private suspend fun resultToState(currencyRatesResult: CurrencyRatesResult): CurrencyRatesState {

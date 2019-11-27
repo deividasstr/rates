@@ -2,7 +2,6 @@ package com.deividasstr.revoratelut.di
 
 import android.content.Context
 import androidx.room.Room
-import com.deividasstr.revoratelut.BuildConfig
 import com.deividasstr.revoratelut.data.network.CurrencyRateNetworkSource
 import com.deividasstr.revoratelut.data.network.CurrencyRateNetworkSourceImpl
 import com.deividasstr.revoratelut.data.network.CurrencyRatesClient
@@ -79,11 +78,11 @@ object KoinModules {
 
     private fun okHttp(): OkHttpClient {
         val clientBuilder = OkHttpClient.Builder()
-        if (BuildConfig.DEBUG) {
+        /*if (BuildConfig.DEBUG) {
             interceptors().forEach { interceptor ->
                 clientBuilder.addInterceptor(interceptor)
             }
-        }
+        }*/
         return clientBuilder.build()
     }
 
