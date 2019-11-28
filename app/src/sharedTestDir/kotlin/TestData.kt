@@ -2,8 +2,9 @@ import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.data.network.CurrencyRatesResponse
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
-import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
 import com.deividasstr.revoratelut.ui.ratelist.CurrencyRatesState
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 import com.deividasstr.revoratelut.ui.utils.toArgedText
 
 object TestData {
@@ -94,11 +95,29 @@ object TestData {
         gbpCurrencyRateModel
     )
 
-    val currencyRatesAvailableFresh = CurrencyRatesState.Available(currencyRatesModel, false)
+    val currencyRatesAvailableFresh = CurrencyRatesState.Loaded(currencyRatesModel)
 
-    val currencyRatesAvailableStale = CurrencyRatesState.Available(
+    val currencyRatesAvailableStaleNetworkIssue = CurrencyRatesState.Loaded(
         currencyRatesModel,
-        true,
-        R.string.issue_network.toArgedText()
+        CurrencyRatesListHint(
+            R.string.issue_network.toArgedText(),
+            R.string.stale_currency_rates.toArgedText(),
+            R.drawable.ic_error_outline_white_48dp)
+    )
+
+    val currencyRatesNotAvailableGenericIssue = CurrencyRatesState.Loaded(
+        hint =
+        CurrencyRatesListHint(
+            R.string.issue_generic.toArgedText(),
+            R.string.no_currency_rates.toArgedText(),
+            R.drawable.ic_error_outline_white_48dp)
+    )
+
+    val currencyRatesNotAvailableNetworkIssue = CurrencyRatesState.Loaded(
+        hint =
+        CurrencyRatesListHint(
+            R.string.issue_network.toArgedText(),
+            R.string.no_currency_rates.toArgedText(),
+            R.drawable.ic_error_outline_white_48dp)
     )
 }

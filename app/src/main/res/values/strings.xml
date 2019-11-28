@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">RevoRateLut</string>
     <string name="rates_list_title">Rates</string>
-    <string name="issue_network">Network issue, please make sure you have a stable network connection</string>
-    <string name="issue_generic">Service issue, please try again later</string>
+    <string name="issue_network">Network issue, please make sure you have a stable network connection.</string>
+    <string name="issue_generic">Service issue, please try again later. </string>
+    <string name="no_currency_rates">No currency rates available yet</string>
+    <string name="stale_currency_rates">Outdated rates, please use them only for a reference.</string>
 </resources>

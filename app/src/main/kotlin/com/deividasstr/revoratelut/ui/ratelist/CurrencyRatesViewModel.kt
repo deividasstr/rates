@@ -9,6 +9,7 @@ import com.deividasstr.revoratelut.data.repository.CurrencyRatesResult
 import com.deividasstr.revoratelut.data.repository.RemoteFailure
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.deividasstr.revoratelut.ui.utils.toArgedText
 import kotlinx.coroutines.Dispatchers
@@ -31,22 +32,35 @@ class CurrencyRatesViewModel(
     private suspend fun resultToState(currencyRatesResult: CurrencyRatesResult): CurrencyRatesState {
         return when (currencyRatesResult) {
             is CurrencyRatesResult.NoResults -> {
-                val error = currencyRatesResult.networkFailure.toErrorRes()
-                CurrencyRatesState.Unavailable(error.toArgedText())
+                val error = currencyRatesResult.networkFailure.toErrorRes().toArgedText()
+                val consequence = R.string.no_currency_rates.toArgedText()
+                CurrencyRatesState.Loaded(
+                    hint = CurrencyRatesListHint(
+                        error,
+                        consequence,
+                        R.drawable.ic_error_outline_white_48dp)
+                )
             }
 
             is CurrencyRatesResult.StaleResult -> with(currencyRatesResult) {
-                val error = networkFailure.toErrorRes()
-                CurrencyRatesState.Available(
+                val error = networkFailure.toErrorRes().toArgedText()
+                val consequence = R.string.stale_currency_rates.toArgedText()
+
+                CurrencyRatesState.Loaded(
                     currencyRates.toModel(),
-                    true,
-                    error.toArgedText())
+                    CurrencyRatesListHint(
+                        error,
+                        consequence,
+                        R.drawable.ic_error_outline_white_48dp
+                    )
+                )
             }
 
-            is CurrencyRatesResult.FreshResult -> CurrencyRatesState.Available(
-                currencyRatesResult.currencyRates.toModel(),
-                false
-            )
+            is CurrencyRatesResult.FreshResult -> CurrencyRatesState.Loaded(
+                currencyRatesResult.currencyRates.toModel())
+
+            is CurrencyRatesResult.InitialResult -> CurrencyRatesState.Loaded(
+                currencyRatesResult.currencyRates.toModel())
         }
     }
 

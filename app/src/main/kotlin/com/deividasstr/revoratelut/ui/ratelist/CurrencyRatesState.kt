@@ -1,17 +1,14 @@
 package com.deividasstr.revoratelut.ui.ratelist
 
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
-import com.deividasstr.revoratelut.ui.utils.ArgedText
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 
 sealed class CurrencyRatesState {
 
-    object Loading: CurrencyRatesState()
+    object Loading : CurrencyRatesState()
 
-    data class Available(
-        val rates: List<CurrencyRateModel>,
-        val stale: Boolean,
-        val error: ArgedText? = null
+    data class Loaded(
+        val rates: List<CurrencyRateModel> = emptyList(),
+        val hint: CurrencyRatesListHint? = null
     ) : CurrencyRatesState()
-
-    data class Unavailable(val error: ArgedText) : CurrencyRatesState()
 }

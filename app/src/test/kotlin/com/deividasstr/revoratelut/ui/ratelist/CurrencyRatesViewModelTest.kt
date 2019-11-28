@@ -2,12 +2,10 @@ package com.deividasstr.revoratelut.ui.ratelist
 
 import TestData
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepo
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesResult
 import com.deividasstr.revoratelut.data.repository.RemoteFailure
 import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
-import com.deividasstr.revoratelut.ui.utils.toArgedText
 import com.jraska.livedata.test
 import io.mockk.every
 import io.mockk.mockk
@@ -31,15 +29,17 @@ class CurrencyRatesViewModelTest {
     private val viewModel = CurrencyRatesViewModel(repo, currencyHelper)
 
     @Test
-    fun `when no results due to network and no cache, should return proper reason`() {
+    fun `when no results due to network and no cache, should load and then return proper reason`() {
         every { repo.currencyRatesResultFlow() } returns flowOf(
             CurrencyRatesResult.NoResults(RemoteFailure.NetworkFailure)
         )
 
-        val expected = CurrencyRatesState.Unavailable(R.string.issue_network.toArgedText())
+        val expected = TestData.currencyRatesNotAvailableNetworkIssue
         viewModel.currencyRatesLive()
             .test()
             .awaitValue()
+            .assertValue(CurrencyRatesState.Loading)
+            .awaitNextValue()
             .assertValue(expected)
     }
 
@@ -49,10 +49,12 @@ class CurrencyRatesViewModelTest {
             CurrencyRatesResult.NoResults(RemoteFailure.GenericFailure)
         )
 
-        val expected = CurrencyRatesState.Unavailable(R.string.issue_generic.toArgedText())
+        val expected = TestData.currencyRatesNotAvailableGenericIssue
         viewModel.currencyRatesLive()
             .test()
             .awaitValue()
+            .assertValue(CurrencyRatesState.Loading)
+            .awaitNextValue()
             .assertValue(expected)
     }
 
@@ -65,6 +67,8 @@ class CurrencyRatesViewModelTest {
         viewModel.currencyRatesLive()
             .test()
             .awaitValue()
+            .assertValue(CurrencyRatesState.Loading)
+            .awaitNextValue()
             .assertValue(TestData.currencyRatesAvailableFresh)
     }
 
@@ -77,6 +81,8 @@ class CurrencyRatesViewModelTest {
         viewModel.currencyRatesLive()
             .test()
             .awaitValue()
-            .assertValue(TestData.currencyRatesAvailableStale)
+            .assertValue(CurrencyRatesState.Loading)
+            .awaitNextValue()
+            .assertValue(TestData.currencyRatesAvailableStaleNetworkIssue)
     }
 }

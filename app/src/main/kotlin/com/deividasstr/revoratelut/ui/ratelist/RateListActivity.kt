@@ -3,10 +3,13 @@ package com.deividasstr.revoratelut.ui.ratelist
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.observe
+import androidx.recyclerview.widget.RecyclerView
 import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.databinding.ActivityRateListBinding
+import com.deividasstr.revoratelut.databinding.HintDefaultBinding
 import com.deividasstr.revoratelut.databinding.ItemRateListBinding
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
+import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 import com.deividasstr.revoratelut.ui.utils.delegating.ListItem
 import com.deividasstr.revoratelut.ui.utils.delegating.LoaderModel
 import com.deividasstr.revoratelut.ui.utils.delegating.StableIdsDifferDelegationAdapter
@@ -20,6 +23,7 @@ class RateListActivity : AppCompatActivity() {
 
     private val viewModel: CurrencyRatesViewModel by viewModel()
     private lateinit var binding: ActivityRateListBinding
+
     private val numberFormatter = NumberFormat.getNumberInstance().apply {
         roundingMode = RoundingMode.HALF_DOWN
         maximumIntegerDigits = 7
@@ -30,6 +34,7 @@ class RateListActivity : AppCompatActivity() {
         StableIdsDifferDelegationAdapter(
             AdapterDelegatesManager(
                 loadingDelegate(),
+                hintDelegate(),
                 currencyRatesModelDelegate()
             )
         )
@@ -40,7 +45,17 @@ class RateListActivity : AppCompatActivity() {
         binding = ActivityRateListBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setRecyclerView()
+        scrollUpOnHint()
         viewModel.currencyRatesLive().observe(this, ::renderState)
+    }
+
+    private fun scrollUpOnHint() {
+        currencyAdapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                super.onItemRangeInserted(positionStart, itemCount)
+                if (positionStart == 0) binding.ratesList.smoothScrollToPosition(0)
+            }
+        })
     }
 
     private fun setRecyclerView() {
@@ -51,12 +66,18 @@ class RateListActivity : AppCompatActivity() {
     }
 
     private fun renderState(currencyRatesState: CurrencyRatesState) {
-        if (currencyRatesState is CurrencyRatesState.Loading) {
-            currencyAdapter.items = listOf(LoaderModel)
+        val itemsToShow = when (currencyRatesState) {
+            is CurrencyRatesState.Loading -> listOf(LoaderModel)
+            is CurrencyRatesState.Loaded -> loadedStateToItems(currencyRatesState)
+            else -> throw IllegalStateException("Unknown currencyRatesState $currencyRatesState")
         }
-        if (currencyRatesState is CurrencyRatesState.Available) {
-            currencyAdapter.items = currencyRatesState.rates
-        }
+        currencyAdapter.items = itemsToShow
+    }
+
+    private fun loadedStateToItems(
+        currencyRatesState: CurrencyRatesState.Loaded
+    ): List<ListItem> {
+        return listOfNotNull(currencyRatesState.hint).plus(currencyRatesState.rates)
     }
 
     private fun currencyRatesModelDelegate() =
@@ -78,7 +99,18 @@ class RateListActivity : AppCompatActivity() {
             }
         }
 
-    private fun loadingDelegate() =
-        adapterDelegate<LoaderModel, ListItem>(R.layout.loader_delegate){}
+    private fun hintDelegate() =
+        adapterDelegate<CurrencyRatesListHint, ListItem>(R.layout.hint_default) {
+            val binder = HintDefaultBinding.bind(itemView)
+            bind {
+                with(binder) {
+                    title.text = item.firstText.getString(resources)
+                    body.text = item.secondText.getString(resources)
+                    icon.setImageResource(item.icon)
+                }
+            }
+        }
 
+    private fun loadingDelegate() =
+        adapterDelegate<LoaderModel, ListItem>(R.layout.loader_delegate) {}
 }

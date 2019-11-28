@@ -12,4 +12,6 @@ sealed class CurrencyRatesResult {
     ) : CurrencyRatesResult()
 
     data class FreshResult(val currencyRates: List<CurrencyWithRate>) : CurrencyRatesResult()
+
+    data class InitialResult(val currencyRates: List<CurrencyWithRate>) : CurrencyRatesResult()
 }

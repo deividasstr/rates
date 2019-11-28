@@ -10,10 +10,12 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runBlockingTest
-import org.amshove.kluent.shouldEqual
+import org.amshove.kluent.shouldContainSame
 import org.junit.Before
 import org.junit.Test
 
@@ -31,65 +33,99 @@ class CurrencyRatesRepoImplTest {
     }
 
     @Test
-    fun `when getting currencyRatesResult and no cache, should retrieve data from network`() = runBlockingTest {
-        coEvery { storage.getCurrencyRates() } returns emptyList()
+    fun `when getting currencyRatesResult and no cache, should return initial empty data and return data from network`() =
+        runBlockingTest {
+            coEvery { storage.getCurrencyRates() } returns emptyList()
 
-        val expected = NetworkResultWrapper.Success(TestData.rates)
+            val answer = NetworkResultWrapper.Success(TestData.rates)
 
-        every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(expected)
+            every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
-        val result = repo.currencyRatesResultFlow(TestData.eurCurrency).first()
+            val result = repo.currencyRatesResultFlow(TestData.eurCurrency)
+                .take(2)
+                .toList(mutableListOf())
 
-        result shouldEqual CurrencyRatesResult.FreshResult(expected.value)
-    }
+            val expected = listOf(
+                CurrencyRatesResult.InitialResult(emptyList()),
+                CurrencyRatesResult.FreshResult(answer.value)
+            )
+
+            result shouldContainSame expected
+        }
 
     @Test
-    fun `when getting currencyRatesResult and no cache and retrieved from network, should cache data`() = runBlockingTest {
-        coEvery { storage.getCurrencyRates() } returns emptyList()
+    fun `when getting currencyRatesResult and no cache and retrieved from network, should cache data`() =
+        runBlockingTest {
+            coEvery { storage.getCurrencyRates() } returns emptyList()
 
-        val expected = NetworkResultWrapper.Success(TestData.rates)
-        every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(expected)
+            val answer = NetworkResultWrapper.Success(TestData.rates)
+            every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
-        repo.currencyRatesResultFlow(TestData.eurCurrency).first()
+            repo.currencyRatesResultFlow(TestData.eurCurrency).take(2).count()
 
-        coVerify { storage.setCurrencyRates(any()) }
-    }
+            coVerify { storage.setCurrencyRates(any()) }
+        }
 
     @Test
     fun `when getting currencyRatesResult and cache available and network request fails, should return cache with reason`() =
         runBlockingTest {
             coEvery { storage.getCurrencyRates() } returns TestData.rates
 
-            val expected = NetworkResultWrapper.GenericError()
-            every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(expected)
+            val answer = NetworkResultWrapper.GenericError()
+            every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
-            val result = repo.currencyRatesResultFlow(TestData.eurCurrency).first()
-            result shouldEqual CurrencyRatesResult.StaleResult(
-                TestData.rates,
-                RemoteFailure.GenericFailure
+            val result = repo.currencyRatesResultFlow(TestData.eurCurrency)
+                .take(2)
+                .toList(mutableListOf())
+
+            val expected = listOf(
+                CurrencyRatesResult.InitialResult(TestData.rates),
+                CurrencyRatesResult.StaleResult(
+                    TestData.rates,
+                    RemoteFailure.GenericFailure
+                )
             )
+
+            result shouldContainSame expected
         }
 
     @Test
-    fun `when getting currencyRatesResult and no cache and no network, should return empty data and reason`() = runBlockingTest {
-        coEvery { storage.getCurrencyRates() } returns emptyList()
+    fun `when getting currencyRatesResult and no cache and no network, should return empty data and reason`() =
+        runBlockingTest {
+            coEvery { storage.getCurrencyRates() } returns emptyList()
 
-        val expected = NetworkResultWrapper.GenericError()
-        every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(expected)
+            val answer = NetworkResultWrapper.GenericError()
+            every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
-        val result = repo.currencyRatesResultFlow(TestData.eurCurrency).first()
-        result shouldEqual CurrencyRatesResult.NoResults(RemoteFailure.GenericFailure)
-    }
+            val result = repo.currencyRatesResultFlow(TestData.eurCurrency)
+                .take(2)
+                .toList(mutableListOf())
+
+            val expected = listOf(
+                CurrencyRatesResult.InitialResult(emptyList()),
+                CurrencyRatesResult.NoResults(RemoteFailure.GenericFailure)
+            )
+
+            result shouldContainSame expected
+        }
 
     @Test
-    fun `when getting currencyRatesResult and cache available, should prioritize network data`() = runBlockingTest {
-        coEvery { storage.getCurrencyRates() } returns TestData.rates2
+    fun `when getting currencyRatesResult and cache available, should return cache on initially and then network data`() =
+        runBlockingTest {
+            coEvery { storage.getCurrencyRates() } returns TestData.rates2
 
-        val expected = NetworkResultWrapper.Success(TestData.rates)
-        every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(expected)
+            val answer = NetworkResultWrapper.Success(TestData.rates)
+            every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
-        val result = repo.currencyRatesResultFlow(TestData.eurCurrency).first()
+            val result = repo.currencyRatesResultFlow(TestData.eurCurrency)
+                .take(2)
+                .toList(mutableListOf())
 
-        result shouldEqual CurrencyRatesResult.FreshResult(expected.value)
-    }
+            val expected = listOf(
+                CurrencyRatesResult.InitialResult(TestData.rates2),
+                CurrencyRatesResult.FreshResult(answer.value)
+            )
+
+            result shouldContainSame expected
+        }
 }

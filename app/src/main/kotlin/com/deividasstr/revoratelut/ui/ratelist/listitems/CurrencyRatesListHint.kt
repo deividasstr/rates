@@ -1,9 +1,14 @@
 package com.deividasstr.revoratelut.ui.ratelist.listitems
 
+import androidx.annotation.DrawableRes
 import com.deividasstr.revoratelut.ui.utils.ArgedText
 import com.deividasstr.revoratelut.ui.utils.delegating.ListItem
 
-data class CurrencyRatesListHint(val text: ArgedText): ListItem {
+data class CurrencyRatesListHint(
+    val firstText: ArgedText,
+    val secondText: ArgedText,
+    @DrawableRes val icon: Int
+): ListItem {
 
-    override val id = text.hashCode().toString()
+    override val id = hashCode().toString()
 }

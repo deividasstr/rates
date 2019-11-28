@@ -9,6 +9,7 @@ import com.deividasstr.revoratelut.domain.CurrencyWithRate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 
 class CurrencyRatesRepoImpl(
     private val currencyRatesNetworkSource: CurrencyRateNetworkSource,
@@ -20,11 +21,13 @@ class CurrencyRatesRepoImpl(
         val currency = baseCurrency ?: sharedPrefs.getLatestBaseCurrency()
         return currencyRatesNetworkSource.getCurrencyRatesFlow(currency)
             .onEach {
-                if (it is NetworkResultWrapper.Success) {
-                    cacheLatestCurrencyRates(it, currency)
-                }
+                if (it is NetworkResultWrapper.Success) cacheLatestCurrencyRates(it, currency)
             }
             .map(::networkCurrenciesToCurrencyRatesModel)
+            .onStart {
+                val cache = currencyRatesStorage.getCurrencyRates()
+                emit(CurrencyRatesResult.InitialResult(cache))
+            }
     }
 
     private suspend fun cacheLatestCurrencyRates(
