@@ -5,6 +5,8 @@ import com.deividasstr.revoratelut.ui.utils.ArgedText
 
 sealed class CurrencyRatesState {
 
+    object Loading: CurrencyRatesState()
+
     data class Available(
         val rates: List<CurrencyRateModel>,
         val stale: Boolean,

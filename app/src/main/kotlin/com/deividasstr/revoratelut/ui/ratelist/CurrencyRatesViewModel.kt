@@ -14,6 +14,7 @@ import com.deividasstr.revoratelut.ui.utils.toArgedText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 
 class CurrencyRatesViewModel(
     private val currencyRatesRepo: CurrencyRatesRepo,
@@ -24,6 +25,7 @@ class CurrencyRatesViewModel(
         .currencyRatesResultFlow()
         .distinctUntilChanged()
         .map(::resultToState)
+        .onStart { emit(CurrencyRatesState.Loading) }
         .asLiveData(Dispatchers.IO)
 
     private suspend fun resultToState(currencyRatesResult: CurrencyRatesResult): CurrencyRatesState {
