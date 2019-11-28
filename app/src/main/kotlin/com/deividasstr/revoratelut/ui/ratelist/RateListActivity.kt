@@ -8,10 +8,9 @@ import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.databinding.ActivityRateListBinding
 import com.deividasstr.revoratelut.databinding.RateListItemBinding
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
-import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListDiffUtil
-import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListItem
+import com.deividasstr.revoratelut.ui.utils.delegating.ListItem
+import com.deividasstr.revoratelut.ui.utils.delegating.StableIdsDifferDelegationAdapter
 import com.hannesdorfmann.adapterdelegates4.AdapterDelegatesManager
-import com.hannesdorfmann.adapterdelegates4.AsyncListDifferDelegationAdapter
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegate
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.math.RoundingMode
@@ -28,8 +27,7 @@ class RateListActivity : AppCompatActivity() {
     }
 
     private val currencyAdapter by lazy {
-        AsyncListDifferDelegationAdapter(
-            CurrencyRatesListDiffUtil(),
+        StableIdsDifferDelegationAdapter(
             AdapterDelegatesManager(
                 //loadingDelegate(),
                 currencyRatesModelDelegate()
@@ -41,16 +39,17 @@ class RateListActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityRateListBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setRecyclerView()
+        viewModel.currencyRatesLive().observe(this, ::renderState)
+    }
 
-        // To prevent item flickering on refresh
+    private fun setRecyclerView() {
         with(binding.ratesList) {
+            // To prevent item flickering on refresh
             (itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
             setHasFixedSize(true)
             adapter = currencyAdapter
-            setItemViewCacheSize(20);
         }
-
-        viewModel.currencyRatesLive().observe(this, ::renderState)
     }
 
     private fun renderState(currencyRatesState: CurrencyRatesState) {
@@ -60,15 +59,20 @@ class RateListActivity : AppCompatActivity() {
     }
 
     private fun currencyRatesModelDelegate() =
-        adapterDelegate<CurrencyRateModel, CurrencyRatesListItem>(R.layout.rate_list_item) {
+        adapterDelegate<CurrencyRateModel, ListItem>(R.layout.rate_list_item) {
             val binder = RateListItemBinding.bind(itemView)
 
-            bind {
-                with(binder) {
-                    currencyName.text = item.currencyName
-                    currencyCode.text = item.currency.currencyCode
-                    countryImage.setImageResource(item.currencyCountryPic)
-                    currencyUnits.setText(numberFormatter.format(item.rate))
+            bind { payload ->
+                when {
+                    // First render of item
+                    payload.isEmpty() -> with(binder) {
+                        currencyName.text = item.currencyName
+                        currencyCode.text = item.currency.currencyCode
+                        countryImage.setImageResource(item.currencyCountryPic)
+                        currencyUnits.setText(numberFormatter.format(item.rate))
+                    }
+                    // Change of item - only rate changes
+                    else -> binder.currencyUnits.setText(numberFormatter.format(item.rate))
                 }
             }
         }
