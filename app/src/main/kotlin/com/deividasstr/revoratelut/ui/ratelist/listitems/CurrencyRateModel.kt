@@ -3,11 +3,10 @@ package com.deividasstr.revoratelut.ui.ratelist.listitems
 import androidx.annotation.DrawableRes
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.ui.utils.delegating.ListItem
-import java.math.BigDecimal
 
 data class CurrencyRateModel(
     val currency: Currency,
-    val rate: BigDecimal,
+    val rate: String,
     val currencyName: String,
     @DrawableRes val currencyCountryPic: Int
 ): ListItem {

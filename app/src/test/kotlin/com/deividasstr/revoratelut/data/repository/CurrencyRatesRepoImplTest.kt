@@ -4,7 +4,6 @@ import TestData
 import com.deividasstr.revoratelut.data.network.CurrencyRateNetworkSource
 import com.deividasstr.revoratelut.data.network.NetworkResultWrapper
 import com.deividasstr.revoratelut.data.storage.CurrencyRatesStorage
-import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -16,7 +15,6 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runBlockingTest
 import org.amshove.kluent.shouldContainSame
-import org.junit.Before
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
@@ -24,20 +22,14 @@ class CurrencyRatesRepoImplTest {
 
     private val storage: CurrencyRatesStorage = mockk(relaxUnitFun = true)
     private val networkSource: CurrencyRateNetworkSource = mockk()
-    private val sharedPrefs: SharedPrefs = mockk(relaxUnitFun = true)
-    private val repo = CurrencyRatesRepoImpl(networkSource, storage, sharedPrefs)
-
-    @Before
-    fun setUp() {
-        every { sharedPrefs.getLatestBaseCurrency() } returns TestData.eurCurrency
-    }
+    private val repo = CurrencyRatesRepoImpl(networkSource, storage)
 
     @Test
     fun `when getting currencyRatesResult and no cache, should return initial empty data and return data from network`() =
         runBlockingTest {
             coEvery { storage.getCurrencyRates() } returns emptyList()
 
-            val answer = NetworkResultWrapper.Success(TestData.rates)
+            val answer = NetworkResultWrapper.Success(TestData.ratesWOBaseEur)
 
             every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
@@ -45,9 +37,11 @@ class CurrencyRatesRepoImplTest {
                 .take(2)
                 .toList(mutableListOf())
 
+            val answerWEur = NetworkResultWrapper.Success(TestData.rates)
+
             val expected = listOf(
                 CurrencyRatesResult.InitialResult(emptyList()),
-                CurrencyRatesResult.FreshResult(answer.value)
+                CurrencyRatesResult.FreshResult(answerWEur.value)
             )
 
             result shouldContainSame expected
@@ -114,16 +108,18 @@ class CurrencyRatesRepoImplTest {
         runBlockingTest {
             coEvery { storage.getCurrencyRates() } returns TestData.rates2
 
-            val answer = NetworkResultWrapper.Success(TestData.rates)
+            val answer = NetworkResultWrapper.Success(TestData.ratesWOBaseEur)
             every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
             val result = repo.currencyRatesResultFlow(TestData.eurCurrency)
                 .take(2)
                 .toList(mutableListOf())
 
+            val answerWEur = NetworkResultWrapper.Success(TestData.rates)
+
             val expected = listOf(
                 CurrencyRatesResult.InitialResult(TestData.rates2),
-                CurrencyRatesResult.FreshResult(answer.value)
+                CurrencyRatesResult.FreshResult(answerWEur.value)
             )
 
             result shouldContainSame expected

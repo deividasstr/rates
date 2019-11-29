@@ -3,7 +3,6 @@ package com.deividasstr.revoratelut.data.repository
 import com.deividasstr.revoratelut.data.network.CurrencyRateNetworkSource
 import com.deividasstr.revoratelut.data.network.NetworkResultWrapper
 import com.deividasstr.revoratelut.data.storage.CurrencyRatesStorage
-import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
 import kotlinx.coroutines.flow.Flow
@@ -13,16 +12,13 @@ import kotlinx.coroutines.flow.onStart
 
 class CurrencyRatesRepoImpl(
     private val currencyRatesNetworkSource: CurrencyRateNetworkSource,
-    private val currencyRatesStorage: CurrencyRatesStorage,
-    private val sharedPrefs: SharedPrefs
+    private val currencyRatesStorage: CurrencyRatesStorage
 ) : CurrencyRatesRepo {
 
-    override fun currencyRatesResultFlow(baseCurrency: Currency?): Flow<CurrencyRatesResult> {
-        val currency = baseCurrency ?: sharedPrefs.getLatestBaseCurrency()
-        return currencyRatesNetworkSource.getCurrencyRatesFlow(currency)
-            .onEach {
-                if (it is NetworkResultWrapper.Success) cacheLatestCurrencyRates(it, currency)
-            }
+    override fun currencyRatesResultFlow(baseCurrency: Currency): Flow<CurrencyRatesResult> {
+        return currencyRatesNetworkSource.getCurrencyRatesFlow(baseCurrency)
+            .map { tryAddBaseCurrency(it, baseCurrency) }
+            .onEach { if (it is NetworkResultWrapper.Success) cacheResult(it.value) }
             .map(::networkCurrenciesToCurrencyRatesModel)
             .onStart {
                 val cache = currencyRatesStorage.getCurrencyRates()
@@ -30,12 +26,26 @@ class CurrencyRatesRepoImpl(
             }
     }
 
-    private suspend fun cacheLatestCurrencyRates(
+    private fun tryAddBaseCurrency(
+        result: NetworkResultWrapper<List<CurrencyWithRate>>,
+        baseCurrency: Currency): NetworkResultWrapper<List<CurrencyWithRate>> {
+        return when (result) {
+            is NetworkResultWrapper.Success -> resultWithBaseCurrency(result, baseCurrency)
+            else -> result
+        }
+    }
+
+    private fun resultWithBaseCurrency(
         result: NetworkResultWrapper.Success<List<CurrencyWithRate>>,
         baseCurrency: Currency
-    ) {
-        currencyRatesStorage.setCurrencyRates(result.value)
-        sharedPrefs.setLatestBaseCurrency(baseCurrency)
+    ): NetworkResultWrapper<List<CurrencyWithRate>> {
+        val baseCurrencyWithRate = CurrencyWithRate(baseCurrency, 1.00.toBigDecimal())
+        val allCurrencies = listOf(baseCurrencyWithRate).plus(result.value)
+        return NetworkResultWrapper.Success(allCurrencies)
+    }
+
+    private suspend fun cacheResult(result: List<CurrencyWithRate>) {
+        currencyRatesStorage.setCurrencyRates(result)
     }
 
     private suspend fun networkCurrenciesToCurrencyRatesModel(

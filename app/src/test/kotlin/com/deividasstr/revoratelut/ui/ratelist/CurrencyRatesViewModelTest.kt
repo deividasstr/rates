@@ -5,12 +5,15 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepo
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesResult
 import com.deividasstr.revoratelut.data.repository.RemoteFailure
+import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
+import com.deividasstr.revoratelut.domain.NumberFormatter
 import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.jraska.livedata.test
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import utils.TestCoroutineRule
@@ -26,11 +29,18 @@ class CurrencyRatesViewModelTest {
 
     private val repo = mockk<CurrencyRatesRepo>()
     private val currencyHelper = CurrencyHelper()
-    private val viewModel = CurrencyRatesViewModel(repo, currencyHelper)
+    private val sharedPrefs = mockk<SharedPrefs>(relaxUnitFun = true)
+    private val formatter = NumberFormatter()
+    private val viewModel = CurrencyRatesViewModel(repo, currencyHelper, sharedPrefs, formatter)
+
+    @Before
+    fun setUp() {
+        every { sharedPrefs.getLatestBaseCurrency() } returns TestData.eurCurrency
+    }
 
     @Test
     fun `when no results due to network and no cache, should load and then return proper reason`() {
-        every { repo.currencyRatesResultFlow() } returns flowOf(
+        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.NoResults(RemoteFailure.NetworkFailure)
         )
 
@@ -45,7 +55,7 @@ class CurrencyRatesViewModelTest {
 
     @Test
     fun `when no results due to generic issue, should return proper reason`() {
-        every { repo.currencyRatesResultFlow() } returns flowOf(
+        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.NoResults(RemoteFailure.GenericFailure)
         )
 
@@ -60,7 +70,7 @@ class CurrencyRatesViewModelTest {
 
     @Test
     fun `when no issues, should return fresh list of rates`() {
-        every { repo.currencyRatesResultFlow() } returns flowOf(
+        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.FreshResult(TestData.rates)
         )
 
@@ -74,7 +84,7 @@ class CurrencyRatesViewModelTest {
 
     @Test
     fun `when network issues and cache available, should return stale list of rates with reason`() {
-        every { repo.currencyRatesResultFlow() } returns flowOf(
+        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.StaleResult(TestData.rates, RemoteFailure.NetworkFailure)
         )
 

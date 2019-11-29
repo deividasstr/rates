@@ -64,6 +64,7 @@ object Dependencies {
 
         const val lifecycle = "androidx.lifecycle:lifecycle-extensions:${Versions.lifeCycleRc}"
         const val lifecycleLiveData = "androidx.lifecycle:lifecycle-livedata-ktx:${Versions.lifeCycleRc}"
+        const val lifecycleViewModel = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.lifeCycleRc}"
         const val lifecycleCompiler = "androidx.lifecycle:lifecycle-compiler:${Versions.lifeCycleRc}"
         const val lifecycleTest = "androidx.arch.core:core-testing:${Versions.lifeCycle}"
         const val liveDataTest = "com.jraska.livedata:testing-ktx:${Versions.liveDataTest}"
@@ -122,6 +123,7 @@ fun DependencyHandler.implementCoroutines() {
 fun DependencyHandler.implementLifecycle() {
     add("implementation", Dependencies.Libraries.lifecycle)
     add("implementation", Dependencies.Libraries.lifecycleLiveData)
+    add("implementation", Dependencies.Libraries.lifecycleViewModel)
     add("kapt", Dependencies.Libraries.lifecycleCompiler)
     add("testImplementation", Dependencies.Libraries.lifecycleTest)
     add("testImplementation", Dependencies.Libraries.liveDataTest)

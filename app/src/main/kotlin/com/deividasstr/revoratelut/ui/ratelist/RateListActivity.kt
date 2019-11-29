@@ -8,6 +8,7 @@ import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.databinding.ActivityRateListBinding
 import com.deividasstr.revoratelut.databinding.HintDefaultBinding
 import com.deividasstr.revoratelut.databinding.ItemRateListBinding
+import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 import com.deividasstr.revoratelut.ui.utils.delegating.ListItem
@@ -16,18 +17,14 @@ import com.deividasstr.revoratelut.ui.utils.delegating.StableIdsDifferDelegation
 import com.hannesdorfmann.adapterdelegates4.AdapterDelegatesManager
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegate
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import java.math.RoundingMode
-import java.text.NumberFormat
 
 class RateListActivity : AppCompatActivity() {
 
     private val viewModel: CurrencyRatesViewModel by viewModel()
     private lateinit var binding: ActivityRateListBinding
 
-    private val numberFormatter = NumberFormat.getNumberInstance().apply {
-        roundingMode = RoundingMode.HALF_DOWN
-        maximumIntegerDigits = 7
-        maximumFractionDigits = 2
+    private val quantityFocusListener = { currency: Currency ->
+        viewModel.focusedCurrency(currency)
     }
 
     private val currencyAdapter by lazy {
@@ -35,7 +32,7 @@ class RateListActivity : AppCompatActivity() {
             AdapterDelegatesManager(
                 loadingDelegate(),
                 hintDelegate(),
-                currencyRatesModelDelegate()
+                currencyRatesModelDelegate(quantityFocusListener)
             )
         )
     }
@@ -80,9 +77,15 @@ class RateListActivity : AppCompatActivity() {
         return listOfNotNull(currencyRatesState.hint).plus(currencyRatesState.rates)
     }
 
-    private fun currencyRatesModelDelegate() =
+    private fun currencyRatesModelDelegate(
+        onFocus: (Currency) -> Unit
+    ) =
         adapterDelegate<CurrencyRateModel, ListItem>(R.layout.item_rate_list) {
             val binder = ItemRateListBinding.bind(itemView)
+
+            binder.currencyUnits.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) onFocus(item.currency)
+            }
 
             bind { payload ->
                 when {
@@ -91,10 +94,10 @@ class RateListActivity : AppCompatActivity() {
                         currencyName.text = item.currencyName
                         currencyCode.text = item.currency.currencyCode
                         countryImage.setImageResource(item.currencyCountryPic)
-                        currencyUnits.setText(numberFormatter.format(item.rate))
+                        currencyUnits.setText(item.rate)
                     }
                     // Change of item - only rate changes
-                    else -> binder.currencyUnits.setText(numberFormatter.format(item.rate))
+                    else -> binder.currencyUnits.setText(item.rate)
                 }
             }
         }

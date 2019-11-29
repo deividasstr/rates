@@ -13,6 +13,7 @@ import com.deividasstr.revoratelut.data.storage.db.AppDb
 import com.deividasstr.revoratelut.data.storage.db.CurrencyRateDao
 import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
 import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefsImpl
+import com.deividasstr.revoratelut.domain.NumberFormatter
 import com.deividasstr.revoratelut.ui.ratelist.CurrencyRatesViewModel
 import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
@@ -45,10 +46,11 @@ object KoinModules {
 
         val currenciesModule = module {
             single { CurrencyHelper() }
+            single { NumberFormatter() }
         }
 
         val repoModule = module {
-            factory<CurrencyRatesRepo> { CurrencyRatesRepoImpl(get(), get(), get()) }
+            factory<CurrencyRatesRepo> { CurrencyRatesRepoImpl(get(), get()) }
         }
 
         val sharedPrefsModule = module {
@@ -56,7 +58,7 @@ object KoinModules {
         }
 
         val ratesListModule = module {
-            viewModel { CurrencyRatesViewModel(get(), get()) }
+            viewModel { CurrencyRatesViewModel(get(), get(), get(), get()) }
         }
         return listOf(
             networkModule,

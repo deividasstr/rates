@@ -2,12 +2,15 @@ import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.data.network.CurrencyRatesResponse
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
+import com.deividasstr.revoratelut.domain.NumberFormatter
 import com.deividasstr.revoratelut.ui.ratelist.CurrencyRatesState
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 import com.deividasstr.revoratelut.ui.utils.toArgedText
 
 object TestData {
+
+    private val formatter = NumberFormatter()
 
     val eur = "EUR"
     val usd = "USD"
@@ -17,7 +20,7 @@ object TestData {
     val usdCurrency = Currency(usd)
     val gbpCurrency = Currency(gbp)
 
-    const val eurRate: Double = 1.0
+    const val eurRate: Double = 1.00
     const val usdRate: Double = 1.23
     const val usdRate2: Double = 1.2124
     const val gbpRate: Double = 0.89
@@ -48,6 +51,11 @@ object TestData {
         gbpWithRate
     )
 
+    val ratesWOBaseEur = listOf(
+        usdWithRate,
+        gbpWithRate
+    )
+
     val rates2 = listOf(
         CurrencyWithRate(eurCurrency, eurRate.toBigDecimal()),
         CurrencyWithRate(usdCurrency, usdRate2.toBigDecimal()),
@@ -69,7 +77,7 @@ object TestData {
     val eurCurrencyRateModel =
         CurrencyRateModel(
             eurCurrency,
-            eurRate.toBigDecimal(),
+            formatter.format(eurRate.toBigDecimal()),
             "Euro",
             R.drawable.flag_eur
         )
@@ -77,7 +85,7 @@ object TestData {
     val gbpCurrencyRateModel =
         CurrencyRateModel(
             gbpCurrency,
-            gbpRate.toBigDecimal(),
+            formatter.format(gbpRate.toBigDecimal()),
             "British Pound",
             R.drawable.flag_gbp
         )
@@ -85,7 +93,7 @@ object TestData {
     val usdCurrencyRateModel =
         CurrencyRateModel(
             usdCurrency,
-            usdRate.toBigDecimal(),
+            formatter.format(usdRate.toBigDecimal()),
             "United States Dollar",
             R.drawable.flag_usd)
 
