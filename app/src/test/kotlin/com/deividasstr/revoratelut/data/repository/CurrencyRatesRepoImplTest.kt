@@ -37,7 +37,7 @@ class CurrencyRatesRepoImplTest {
                 .take(2)
                 .toList(mutableListOf())
 
-            val answerWEur = NetworkResultWrapper.Success(TestData.rates)
+            val answerWEur = NetworkResultWrapper.Success(TestData.ratesEurBase)
 
             val expected = listOf(
                 CurrencyRatesResult.InitialResult(emptyList()),
@@ -52,7 +52,7 @@ class CurrencyRatesRepoImplTest {
         runBlockingTest {
             coEvery { storage.getCurrencyRates() } returns emptyList()
 
-            val answer = NetworkResultWrapper.Success(TestData.rates)
+            val answer = NetworkResultWrapper.Success(TestData.ratesEurBase)
             every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
 
             repo.currencyRatesResultFlow(TestData.eurCurrency).take(2).count()
@@ -63,7 +63,7 @@ class CurrencyRatesRepoImplTest {
     @Test
     fun `when getting currencyRatesResult and cache available and network request fails, should return cache with reason`() =
         runBlockingTest {
-            coEvery { storage.getCurrencyRates() } returns TestData.rates
+            coEvery { storage.getCurrencyRates() } returns TestData.ratesEurBase
 
             val answer = NetworkResultWrapper.GenericError()
             every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
@@ -73,9 +73,9 @@ class CurrencyRatesRepoImplTest {
                 .toList(mutableListOf())
 
             val expected = listOf(
-                CurrencyRatesResult.InitialResult(TestData.rates),
+                CurrencyRatesResult.InitialResult(TestData.ratesEurBase),
                 CurrencyRatesResult.StaleResult(
-                    TestData.rates,
+                    TestData.ratesEurBase,
                     RemoteFailure.GenericFailure
                 )
             )
@@ -106,7 +106,7 @@ class CurrencyRatesRepoImplTest {
     @Test
     fun `when getting currencyRatesResult and cache available, should return cache on initially and then network data`() =
         runBlockingTest {
-            coEvery { storage.getCurrencyRates() } returns TestData.rates2
+            coEvery { storage.getCurrencyRates() } returns TestData.ratesGbpBase
 
             val answer = NetworkResultWrapper.Success(TestData.ratesWOBaseEur)
             every { networkSource.getCurrencyRatesFlow(any()) } returns flowOf(answer)
@@ -115,10 +115,10 @@ class CurrencyRatesRepoImplTest {
                 .take(2)
                 .toList(mutableListOf())
 
-            val answerWEur = NetworkResultWrapper.Success(TestData.rates)
+            val answerWEur = NetworkResultWrapper.Success(TestData.ratesEurBase)
 
             val expected = listOf(
-                CurrencyRatesResult.InitialResult(TestData.rates2),
+                CurrencyRatesResult.InitialResult(TestData.ratesGbpBase),
                 CurrencyRatesResult.FreshResult(answerWEur.value)
             )
 

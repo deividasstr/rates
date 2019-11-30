@@ -6,14 +6,17 @@ import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepo
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesResult
 import com.deividasstr.revoratelut.data.repository.RemoteFailure
 import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
+import com.deividasstr.revoratelut.domain.Calculator
 import com.deividasstr.revoratelut.domain.NumberFormatter
 import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.jraska.livedata.test
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onEach
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -28,22 +31,24 @@ class CurrencyRatesViewModelTest {
     @get:Rule
     val testCoroutine = TestCoroutineRule()
 
-    private val repo = mockk<CurrencyRatesRepo>()
+    private val repo = mockk<CurrencyRatesRepo>(relaxUnitFun = true)
     private val currencyHelper = CurrencyHelper()
     private val sharedPrefs = mockk<SharedPrefs>(relaxUnitFun = true)
     private val formatter = NumberFormatter()
-    private val viewModel = CurrencyRatesViewModel(repo, currencyHelper, sharedPrefs, formatter)
+    private val viewModel =
+        CurrencyRatesViewModel(repo, currencyHelper, sharedPrefs, formatter, Calculator())
 
     @Before
     fun setUp() {
-        every { sharedPrefs.getLatestBaseCurrency() } returns TestData.eurCurrency
+        every { sharedPrefs.baseCurrency() } returns TestData.eurCurrency
+        every { sharedPrefs.baseCurrencyValue() } returns TestData.eurRate.toBigDecimal()
     }
 
     @Test
     fun `when no results due to network and no cache, should load and then return proper reason`() {
         every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.NoResults(RemoteFailure.NetworkFailure)
-        )
+        ).onEach { delay(20) }
 
         val expected = TestData.currencyRatesNotAvailableNetworkIssue
         viewModel.currencyRatesLive()
@@ -58,7 +63,7 @@ class CurrencyRatesViewModelTest {
     fun `when no results due to generic issue, should return proper reason`() {
         every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.NoResults(RemoteFailure.GenericFailure)
-        )
+        ).onEach { delay(20) }
 
         val expected = TestData.currencyRatesNotAvailableGenericIssue
         viewModel.currencyRatesLive()
@@ -72,8 +77,8 @@ class CurrencyRatesViewModelTest {
     @Test
     fun `when no issues, should return fresh list of rates`() {
         every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
-            CurrencyRatesResult.FreshResult(TestData.rates)
-        )
+            CurrencyRatesResult.FreshResult(TestData.ratesEurBase)
+        ).onEach { delay(20) }
 
         viewModel.currencyRatesLive()
             .test()
@@ -86,8 +91,8 @@ class CurrencyRatesViewModelTest {
     @Test
     fun `when network issues and cache available, should return stale list of rates with reason`() {
         every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
-            CurrencyRatesResult.StaleResult(TestData.rates, RemoteFailure.NetworkFailure)
-        )
+            CurrencyRatesResult.StaleResult(TestData.ratesEurBase, RemoteFailure.NetworkFailure)
+        ).onEach { delay(20) }
 
         viewModel.currencyRatesLive()
             .test()
@@ -98,20 +103,19 @@ class CurrencyRatesViewModelTest {
     }
 
     @Test
-    fun `when setting new base currency, should cache`() {
-        viewModel.focusedCurrency(TestData.gbpCurrency)
+    fun `when setting new base currency, should cache currency`() {
+        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate.toString())
 
-        verify { sharedPrefs.setLatestBaseCurrency(TestData.gbpCurrency) }
+        coVerify { sharedPrefs.setBaseCurrency(TestData.gbpCurrency) }
     }
 
     @Test
-    fun `when setting new base currency, should return new list of rates`() {
-        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
-            CurrencyRatesResult.FreshResult(TestData.rates)
-        )
-
-        every { repo.currencyRatesResultFlow(TestData.gbpCurrency) } returns flowOf(
-            CurrencyRatesResult.FreshResult(TestData.rates2)
+    fun `when setting new base currency and rate value, should return new list of rates`() {
+        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returnsMany listOf(
+            flowOf(
+                CurrencyRatesResult.FreshResult(TestData.ratesEurBase),
+                CurrencyRatesResult.FreshResult(TestData.ratesGbpBase)
+            ).onEach { delay(20) } // Too fast otherwise
         )
 
         val currencyRatesLive = viewModel.currencyRatesLive()
@@ -121,9 +125,30 @@ class CurrencyRatesViewModelTest {
             .awaitNextValue()
             .assertValue(TestData.currencyRatesAvailableFresh)
 
-        viewModel.focusedCurrency(TestData.gbpCurrency)
+        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.currencyInputValue)
 
         currencyRatesLive.awaitNextValue()
             .assertValue(TestData.currencyRatesAvailableFresh2)
+    }
+
+    @Test
+    fun `when setting new base currency, should cache rate`() {
+        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate.toString())
+
+        coVerify { sharedPrefs.setBaseCurrencyValue(TestData.eurRate.toBigDecimal()) }
+    }
+
+    @Test
+    fun `when setting new base currency rate, should cache`() {
+        viewModel.changeBaseCurrencyRate(TestData.eurRate.toString())
+
+        coVerify { sharedPrefs.setBaseCurrencyValue(TestData.eurRate.toBigDecimal()) }
+    }
+
+    @Test
+    fun `when setting new base currency, should set in repo`() {
+        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate.toString())
+
+        coVerify { repo.setBaseCurrency(TestData.gbpCurrency) }
     }
 }

@@ -9,6 +9,7 @@ import com.deividasstr.revoratelut.data.repository.CurrencyRatesRepo
 import com.deividasstr.revoratelut.data.repository.CurrencyRatesResult
 import com.deividasstr.revoratelut.data.repository.RemoteFailure
 import com.deividasstr.revoratelut.data.storage.sharedprefs.SharedPrefs
+import com.deividasstr.revoratelut.domain.Calculator
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
 import com.deividasstr.revoratelut.domain.NumberFormatter
@@ -17,34 +18,50 @@ import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.deividasstr.revoratelut.ui.utils.toArgedText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
+import java.util.concurrent.atomic.AtomicReference
 
+@ExperimentalCoroutinesApi
 class CurrencyRatesViewModel(
     private val currencyRatesRepo: CurrencyRatesRepo,
     private val currencyHelper: CurrencyHelper,
     private val sharedPrefs: SharedPrefs,
-    private val numberFormatter: NumberFormatter
+    private val numberFormatter: NumberFormatter,
+    private val calculator: Calculator
 ) : ViewModel() {
 
-    private val baseCurrencyChannel by lazy {
-        ConflatedBroadcastChannel(sharedPrefs.getLatestBaseCurrency())
+    private val baseCurrencyValueTickler by lazy {
+        ConflatedBroadcastChannel(Unit)
     }
 
-    fun currencyRatesLive(): LiveData<CurrencyRatesState> =
-        baseCurrencyChannel.asFlow()
-            .flatMapLatest { currencyRatesRepo.currencyRatesResultFlow(it) }
+    private val baseCurrencyValue by lazy {
+        AtomicReference<BigDecimal>(sharedPrefs.baseCurrencyValue())
+    }
+
+    /*
+    * Main data source for Activity. Debounce, add rate to baseCurrencyChannel or
+    */
+    fun currencyRatesLive(): LiveData<CurrencyRatesState> {
+        val baseCurrencyTicklerFlow = baseCurrencyValueTickler.asFlow()
+        return currencyRatesRepo.currencyRatesResultFlow(sharedPrefs.baseCurrency())
             .distinctUntilChanged()
-            .map(::resultToState)
+            .combine(baseCurrencyTicklerFlow, ::generateState)
             .onStart { emit(CurrencyRatesState.Loading) }
             .asLiveData(Dispatchers.IO)
+    }
 
-    private suspend fun resultToState(currencyRatesResult: CurrencyRatesResult): CurrencyRatesState {
+    //TODO: refactor - sealed class contains values
+    private suspend fun generateState(
+        currencyRatesResult: CurrencyRatesResult,
+        tickler: Unit
+    ): CurrencyRatesState {
         return when (currencyRatesResult) {
             is CurrencyRatesResult.NoResults -> {
                 val error = currencyRatesResult.networkFailure.toErrorRes().toArgedText()
@@ -92,21 +109,35 @@ class CurrencyRatesViewModel(
 
     private fun CurrencyWithRate.toModel(): CurrencyRateModel {
         val currencyDetails = currencyHelper.getCurrencyDetails(currency.currencyCode)
+        val adjustedRate = calculator.multiply(rate, baseCurrencyValue.get())
         return CurrencyRateModel(
             currency,
-            numberFormatter.format(rate),
+            numberFormatter.format(adjustedRate),
             currencyDetails.currencyName,
             currencyDetails.currencyFlag
         )
     }
 
-    fun focusedCurrency(currency: Currency) {
-        sharedPrefs.setLatestBaseCurrency(currency)
-        viewModelScope.launch(Dispatchers.IO) { baseCurrencyChannel.send(currency) }
+    fun changeBaseCurrency(
+        currency: Currency,
+        rate: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val parsedRate = numberFormatter.parseOrZero(rate)
+            sharedPrefs.setBaseCurrencyValue(parsedRate)
+            sharedPrefs.setBaseCurrency(currency)
+
+            baseCurrencyValue.set(parsedRate)
+            currencyRatesRepo.setBaseCurrency(currency)
+        }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        baseCurrencyChannel.close()
+    fun changeBaseCurrencyRate(newBaseRate: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val parsedRate = numberFormatter.parseOrZero(newBaseRate)
+            sharedPrefs.setBaseCurrencyValue(parsedRate)
+            baseCurrencyValue.set(parsedRate)
+            baseCurrencyValueTickler.send(Unit)
+        }
     }
 }

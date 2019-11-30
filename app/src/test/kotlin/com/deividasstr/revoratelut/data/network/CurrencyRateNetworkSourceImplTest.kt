@@ -38,8 +38,8 @@ class CurrencyRateNetworkSourceImplTest {
             .toCollection(results)
 
         results shouldContainSame listOf(
-            NetworkResultWrapper.Success(TestData.rates),
-            NetworkResultWrapper.Success(TestData.rates2)
+            NetworkResultWrapper.Success(TestData.ratesEurBase),
+            NetworkResultWrapper.Success(TestData.ratesGbpBase)
         )
     }
 
@@ -61,7 +61,7 @@ class CurrencyRateNetworkSourceImplTest {
                 .toCollection(results)
 
             results shouldContainSame listOf(
-                NetworkResultWrapper.Success(TestData.rates),
+                NetworkResultWrapper.Success(TestData.ratesEurBase),
                 NetworkResultWrapper.NetworkError
             )
         }
@@ -85,7 +85,7 @@ class CurrencyRateNetworkSourceImplTest {
 
             results shouldContainSame listOf(
                 NetworkResultWrapper.NetworkError,
-                NetworkResultWrapper.Success(TestData.rates2)
+                NetworkResultWrapper.Success(TestData.ratesGbpBase)
             )
         }
 

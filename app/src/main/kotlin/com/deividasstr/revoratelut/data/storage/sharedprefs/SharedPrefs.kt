@@ -1,9 +1,13 @@
 package com.deividasstr.revoratelut.data.storage.sharedprefs
 
 import com.deividasstr.revoratelut.domain.Currency
+import java.math.BigDecimal
 
 interface SharedPrefs {
 
-    fun getLatestBaseCurrency(): Currency
-    fun setLatestBaseCurrency(currency: Currency)
+    fun baseCurrency(): Currency
+    suspend fun setBaseCurrency(currency: Currency)
+
+    fun baseCurrencyValue(): BigDecimal
+    suspend fun setBaseCurrencyValue(value: BigDecimal)
 }

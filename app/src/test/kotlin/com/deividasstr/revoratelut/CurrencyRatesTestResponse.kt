@@ -5,8 +5,8 @@ object CurrencyRatesTestResponse {
         "    \"date\": \"2018-09-06\",\n" +
         "    \"rates\":\n" +
         "    {\n" +
-        "        \"GBP\": 0.89,\n" +
-        "        \"USD\": 1.23\n" +
+        "        \"GBP\": 0.89245,\n" +
+        "        \"USD\": 1.23125\n" +
         "    }\n" +
         "}"
 }

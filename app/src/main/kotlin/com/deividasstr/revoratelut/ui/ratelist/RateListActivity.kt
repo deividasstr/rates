@@ -9,6 +9,7 @@ import com.deividasstr.revoratelut.databinding.ActivityRateListBinding
 import com.deividasstr.revoratelut.databinding.HintDefaultBinding
 import com.deividasstr.revoratelut.databinding.ItemRateListBinding
 import com.deividasstr.revoratelut.domain.Currency
+import com.deividasstr.revoratelut.extensions.afterTextChanged
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRateModel
 import com.deividasstr.revoratelut.ui.ratelist.listitems.CurrencyRatesListHint
 import com.deividasstr.revoratelut.ui.utils.delegating.ListItem
@@ -16,15 +17,22 @@ import com.deividasstr.revoratelut.ui.utils.delegating.LoaderModel
 import com.deividasstr.revoratelut.ui.utils.delegating.StableIdsDifferDelegationAdapter
 import com.hannesdorfmann.adapterdelegates4.AdapterDelegatesManager
 import com.hannesdorfmann.adapterdelegates4.dsl.adapterDelegate
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
+@ExperimentalCoroutinesApi
 class RateListActivity : AppCompatActivity() {
 
     private val viewModel: CurrencyRatesViewModel by viewModel()
     private lateinit var binding: ActivityRateListBinding
 
-    private val quantityFocusListener = { currency: Currency ->
-        viewModel.focusedCurrency(currency)
+    private val quantityChangeListener = { text: String ->
+        viewModel.changeBaseCurrencyRate(text)
+    }
+
+    private val quantityFocusListener = { currency: Currency, rate: String ->
+        viewModel.changeBaseCurrency(currency, rate)
+        //viewModel.changeBaseCurrencyRate(rate)
     }
 
     private val currencyAdapter by lazy {
@@ -32,7 +40,7 @@ class RateListActivity : AppCompatActivity() {
             AdapterDelegatesManager(
                 loadingDelegate(),
                 hintDelegate(),
-                currencyRatesModelDelegate(quantityFocusListener)
+                currencyRatesModelDelegate(quantityFocusListener, quantityChangeListener)
             )
         )
     }
@@ -66,7 +74,6 @@ class RateListActivity : AppCompatActivity() {
         val itemsToShow = when (currencyRatesState) {
             is CurrencyRatesState.Loading -> listOf(LoaderModel)
             is CurrencyRatesState.Loaded -> loadedStateToItems(currencyRatesState)
-            else -> throw IllegalStateException("Unknown currencyRatesState $currencyRatesState")
         }
         currencyAdapter.items = itemsToShow
     }
@@ -78,13 +85,18 @@ class RateListActivity : AppCompatActivity() {
     }
 
     private fun currencyRatesModelDelegate(
-        onFocus: (Currency) -> Unit
+        onFocus: (Currency, String) -> Unit,
+        onValueChange: (String) -> Unit
     ) =
         adapterDelegate<CurrencyRateModel, ListItem>(R.layout.item_rate_list) {
             val binder = ItemRateListBinding.bind(itemView)
 
             binder.currencyUnits.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) onFocus(item.currency)
+                if (hasFocus) onFocus(item.currency, binder.currencyUnits.text.toString())
+            }
+
+            binder.currencyUnits.afterTextChanged { text ->
+                if (binder.currencyUnits.hasFocus()) onValueChange(text)
             }
 
             bind { payload ->
@@ -97,7 +109,9 @@ class RateListActivity : AppCompatActivity() {
                         currencyUnits.setText(item.rate)
                     }
                     // Change of item - only rate changes
-                    else -> binder.currencyUnits.setText(item.rate)
+                    else -> {
+                        if (!binder.currencyUnits.hasFocus()) binder.currencyUnits.setText(item.rate)
+                    }
                 }
             }
         }

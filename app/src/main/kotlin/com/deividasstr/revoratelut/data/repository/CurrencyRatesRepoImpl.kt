@@ -5,7 +5,10 @@ import com.deividasstr.revoratelut.data.network.NetworkResultWrapper
 import com.deividasstr.revoratelut.data.storage.CurrencyRatesStorage
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
+import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -15,15 +18,25 @@ class CurrencyRatesRepoImpl(
     private val currencyRatesStorage: CurrencyRatesStorage
 ) : CurrencyRatesRepo {
 
+    private lateinit var baseCurrencyChannel: ConflatedBroadcastChannel<Currency>
+
     override fun currencyRatesResultFlow(baseCurrency: Currency): Flow<CurrencyRatesResult> {
-        return currencyRatesNetworkSource.getCurrencyRatesFlow(baseCurrency)
-            .map { tryAddBaseCurrency(it, baseCurrency) }
+        baseCurrencyChannel = ConflatedBroadcastChannel(baseCurrency)
+        return baseCurrencyChannel.asFlow()
+            .flatMapLatest {
+                currencyRatesNetworkSource.getCurrencyRatesFlow(it)
+            }
+            .map { tryAddBaseCurrency(it, baseCurrencyChannel.value) }
             .onEach { if (it is NetworkResultWrapper.Success) cacheResult(it.value) }
             .map(::networkCurrenciesToCurrencyRatesModel)
             .onStart {
                 val cache = currencyRatesStorage.getCurrencyRates()
                 emit(CurrencyRatesResult.InitialResult(cache))
             }
+    }
+
+    override suspend fun setBaseCurrency(baseCurrency: Currency) {
+        baseCurrencyChannel.send(baseCurrency)
     }
 
     private fun tryAddBaseCurrency(

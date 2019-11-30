@@ -56,21 +56,21 @@ class CurrencyRatesStorageImplTest {
     @Test
     fun whenAddCurrencyRatings_getAllReturnsCurrencyRatings() =
         testCoroutine.testDispatcher.runBlockingTest {
-            currencyRatesStorage.setCurrencyRates(TestData.rates)
+            currencyRatesStorage.setCurrencyRates(TestData.ratesEurBase)
             val result = currencyRatesStorage.getCurrencyRates()
-            result shouldContainSame TestData.rates
+            result shouldContainSame TestData.ratesEurBase
         }
 
     @Test
     fun whenNewCurrencyRatesSet_shouldOverrideOldOnes() =
         testCoroutine.testDispatcher.runBlockingTest {
-            currencyRatesStorage.setCurrencyRates(TestData.rates)
+            currencyRatesStorage.setCurrencyRates(TestData.ratesEurBase)
             val result = currencyRatesStorage.getCurrencyRates()
-            result shouldContainSame TestData.rates
+            result shouldContainSame TestData.ratesEurBase
 
-            currencyRatesStorage.setCurrencyRates(TestData.rates2)
+            currencyRatesStorage.setCurrencyRates(TestData.ratesGbpBase)
             val result2 = currencyRatesStorage.getCurrencyRates()
-            result2 shouldContainSame TestData.rates2
+            result2 shouldContainSame TestData.ratesGbpBase
         }
 
     @After

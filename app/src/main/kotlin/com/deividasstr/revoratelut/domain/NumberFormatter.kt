@@ -18,4 +18,12 @@ class NumberFormatter {
     }
 
     fun format(number: BigDecimal): String = formatter.get()!!.format(number)
+
+    fun parseOrZero(number: String): BigDecimal {
+        val checkedNumber = if (isInvalidNumberString(number)) "0.00" else number
+        return formatter.get()!!.parse(checkedNumber)!!.toDouble().toBigDecimal()
+    }
+
+    private fun isInvalidNumberString(newBaseRate: String) =
+        newBaseRate.isBlank() || newBaseRate == "." || newBaseRate == ","
 }
