@@ -11,6 +11,7 @@ import com.deividasstr.revoratelut.ui.utils.currency.CurrencyHelper
 import com.jraska.livedata.test
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Before
@@ -94,5 +95,35 @@ class CurrencyRatesViewModelTest {
             .assertValue(CurrencyRatesState.Loading)
             .awaitNextValue()
             .assertValue(TestData.currencyRatesAvailableStaleNetworkIssue)
+    }
+
+    @Test
+    fun `when setting new base currency, should cache`() {
+        viewModel.focusedCurrency(TestData.gbpCurrency)
+
+        verify { sharedPrefs.setLatestBaseCurrency(TestData.gbpCurrency) }
+    }
+
+    @Test
+    fun `when setting new base currency, should return new list of rates`() {
+        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
+            CurrencyRatesResult.FreshResult(TestData.rates)
+        )
+
+        every { repo.currencyRatesResultFlow(TestData.gbpCurrency) } returns flowOf(
+            CurrencyRatesResult.FreshResult(TestData.rates2)
+        )
+
+        val currencyRatesLive = viewModel.currencyRatesLive()
+            .test()
+            .awaitValue()
+            .assertValue(CurrencyRatesState.Loading)
+            .awaitNextValue()
+            .assertValue(TestData.currencyRatesAvailableFresh)
+
+        viewModel.focusedCurrency(TestData.gbpCurrency)
+
+        currencyRatesLive.awaitNextValue()
+            .assertValue(TestData.currencyRatesAvailableFresh2)
     }
 }

@@ -20,7 +20,8 @@ object TestData {
     val usdCurrency = Currency(usd)
     val gbpCurrency = Currency(gbp)
 
-    const val eurRate: Double = 1.00
+    const val eurRate: Double = 0.9
+    const val eurRate2: Double = 1.00
     const val usdRate: Double = 1.23
     const val usdRate2: Double = 1.2124
     const val gbpRate: Double = 0.89
@@ -29,6 +30,10 @@ object TestData {
     val eurWithRate = CurrencyWithRate(eurCurrency, eurRate.toBigDecimal())
     val usdWithRate = CurrencyWithRate(usdCurrency, usdRate.toBigDecimal())
     val gbpWithRate = CurrencyWithRate(gbpCurrency, gbpRate.toBigDecimal())
+
+    val eurWithRate2 = CurrencyWithRate(eurCurrency, eurRate2.toBigDecimal())
+    val usdWithRate2 = CurrencyWithRate(usdCurrency, usdRate2.toBigDecimal())
+    val gbpWithRate2 = CurrencyWithRate(gbpCurrency, gbpRate2.toBigDecimal())
 
     val currenciesToRates = mapOf(
         eur to eurRate,
@@ -51,16 +56,22 @@ object TestData {
         gbpWithRate
     )
 
+    val rates2 = listOf(
+        eurWithRate2,
+        usdWithRate2,
+        gbpWithRate2
+    )
+
     val ratesWOBaseEur = listOf(
         usdWithRate,
         gbpWithRate
     )
 
-    val rates2 = listOf(
+    /*val rates2 = listOf(
         CurrencyWithRate(eurCurrency, eurRate.toBigDecimal()),
         CurrencyWithRate(usdCurrency, usdRate2.toBigDecimal()),
         CurrencyWithRate(gbpCurrency, gbpRate2.toBigDecimal())
-    )
+    )*/
 
     private val responseRatesMap = mapOf(
         gbp to gbpRate,
@@ -97,13 +108,44 @@ object TestData {
             "United States Dollar",
             R.drawable.flag_usd)
 
+    val eurCurrencyRateModel2 =
+        CurrencyRateModel(
+            eurCurrency,
+            formatter.format(eurRate2.toBigDecimal()),
+            "Euro",
+            R.drawable.flag_eur
+        )
+
+    val gbpCurrencyRateModel2 =
+        CurrencyRateModel(
+            gbpCurrency,
+            formatter.format(gbpRate2.toBigDecimal()),
+            "British Pound",
+            R.drawable.flag_gbp
+        )
+
+    val usdCurrencyRateModel2 =
+        CurrencyRateModel(
+            usdCurrency,
+            formatter.format(usdRate2.toBigDecimal()),
+            "United States Dollar",
+            R.drawable.flag_usd)
+
     val currencyRatesModel = listOf(
         eurCurrencyRateModel,
         usdCurrencyRateModel,
         gbpCurrencyRateModel
     )
 
+    val currencyRatesModel2 = listOf(
+        eurCurrencyRateModel2,
+        usdCurrencyRateModel2,
+        gbpCurrencyRateModel2
+    )
+
     val currencyRatesAvailableFresh = CurrencyRatesState.Loaded(currencyRatesModel)
+
+    val currencyRatesAvailableFresh2 = CurrencyRatesState.Loaded(currencyRatesModel2)
 
     val currencyRatesAvailableStaleNetworkIssue = CurrencyRatesState.Loaded(
         currencyRatesModel,
