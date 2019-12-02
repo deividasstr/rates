@@ -2,4 +2,8 @@
 object SecretProperties {
 
     const val baseUrl = "https://revolut.duckdns.org/"
+    const val storePassword = "RevoRateLut"
+    const val keyPassword="RevoRateLut"
+    const val keyAlias="RevoRateLut"
+    const val storeFile="keystore.jks"
 }

@@ -1,3 +1,6 @@
+
+import com.android.build.gradle.internal.dsl.BaseAppModuleExtension
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -33,6 +36,28 @@ android {
     sourceSets["androidTest"].java.srcDir("src/androidTest/kotlin")
     sourceSets["test"].java.srcDir("src/sharedTestDir/kotlin")
     sourceSets["androidTest"].java.srcDir("src/sharedTestDir/kotlin")
+
+    createSigningConfigs()
+    setSigningConfigToRelease()
+}
+
+fun BaseAppModuleExtension.createSigningConfigs() {
+    signingConfigs {
+        create("release") {
+            keyAlias = SecretProperties.keyAlias
+            keyPassword = SecretProperties.keyPassword
+            storeFile = rootProject.file(SecretProperties.storeFile)
+            storePassword = SecretProperties.storePassword
+        }
+    }
+}
+
+fun BaseAppModuleExtension.setSigningConfigToRelease() {
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
 }
 
 dependencies {
