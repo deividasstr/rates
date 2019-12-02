@@ -11,7 +11,6 @@ class NumberFormatter {
         override fun initialValue(): NumberFormat {
             return NumberFormat.getNumberInstance().apply {
                 roundingMode = RoundingMode.HALF_DOWN
-                maximumIntegerDigits = 7
                 maximumFractionDigits = 2
             }
         }
