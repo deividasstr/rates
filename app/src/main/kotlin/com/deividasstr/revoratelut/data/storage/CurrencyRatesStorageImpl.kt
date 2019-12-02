@@ -22,6 +22,6 @@ class CurrencyRatesStorageImpl(private val currencyRateDao: CurrencyRateDao) :
     }
 
     private fun CurrencyWithRate.toCurrencyRateEntity(): CurrencyRateEntity {
-        return CurrencyRateEntity(currency.currencyCode, rate.toDouble())
+        return CurrencyRateEntity(currency.currencyCode, rate.toString())
     }
 }

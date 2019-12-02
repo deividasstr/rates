@@ -69,7 +69,7 @@ class CurrencyRatesViewModel(
     private suspend fun moveBaseCurrencyTop(ratesToCurrency: Pair<CurrencyRatesResult, Currency>
     ): Pair<CurrencyRatesResult, Currency> {
         val result = ratesToCurrency.first
-        if (result.currencyRates == null) return ratesToCurrency
+        if (result.currencyRates.isNullOrEmpty()) return ratesToCurrency
 
         val selectedCurrency = ratesToCurrency.second
         val currencies = result.currencyRates!!.toMutableList()
@@ -84,7 +84,7 @@ class CurrencyRatesViewModel(
         resultToCurrency: Pair<CurrencyRatesResult, Currency>,
         tickler: Unit
     ): CurrencyRatesResult {
-        if (resultToCurrency.first.currencyRates == null) return resultToCurrency.first
+        if (resultToCurrency.first.currencyRates.isNullOrEmpty()) return resultToCurrency.first
 
         val currencyRates = resultToCurrency.first.currencyRates!!
         val currency = resultToCurrency.second

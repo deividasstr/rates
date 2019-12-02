@@ -43,7 +43,7 @@ class CurrencyRateNetworkSourceImpl(
     }
 
     private fun rateMapToCurrencyWithRatioList(
-        currencyToRate: Map.Entry<String, Double>
+        currencyToRate: Map.Entry<String, String>
     ): CurrencyWithRate {
         val currency = Currency(currencyToRate.key)
         val ratio = currencyToRate.value.toBigDecimal()

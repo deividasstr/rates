@@ -22,12 +22,12 @@ object TestData {
     val usdCurrency = Currency(usd)
     val gbpCurrency = Currency(gbp)
 
-    const val eurRate: Double = 1.00
-    const val usdRate: Double = 1.23125
-    const val gbpRate: Double = 0.89245
-    const val eurRate2: Double = eurRate / gbpRate
-    const val usdRate2: Double = usdRate / gbpRate
-    const val gbpRate2: Double = eurRate
+    const val eurRate = "1.0"
+    const val usdRate = "1.23125"
+    const val gbpRate = "0.89245"
+    val eurRate2 = (eurRate.toDouble() / gbpRate.toDouble()).toString()
+    val usdRate2 = (usdRate.toDouble() / gbpRate.toDouble()).toString()
+    const val gbpRate2= eurRate
 
     const val currencyInputValue = "10"
 

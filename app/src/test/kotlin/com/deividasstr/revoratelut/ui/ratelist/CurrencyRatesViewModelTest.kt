@@ -156,7 +156,7 @@ class CurrencyRatesViewModelTest {
 
     @Test
     fun `when setting new base currency, should cache rate`() = runBlockingTest {
-        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate.toString())
+        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate)
 
         coVerify { sharedPrefs.setBaseCurrencyValue(TestData.eurRate.toBigDecimal()) }
     }
