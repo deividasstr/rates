@@ -1,4 +1,3 @@
-
 import com.deividasstr.revoratelut.R
 import com.deividasstr.revoratelut.data.network.CurrencyRatesResponse
 import com.deividasstr.revoratelut.domain.Calculator
@@ -84,26 +83,26 @@ object TestData {
     )
 
     // Fragile test data - currency lib specific
-    val eurCurrencyRateModel =
+    fun eurCurrencyRateModel(timesString: String = "1") =
         CurrencyRateModel(
             eurCurrency,
-            formatter.format(eurRate.toBigDecimal()),
+            formatter.format(formatter.parseOrZero(timesString) * eurRate.toBigDecimal()),
             "Euro",
             R.drawable.flag_eur
         )
 
-    val gbpCurrencyRateModel =
+    fun gbpCurrencyRateModel(timesString: String = "1") =
         CurrencyRateModel(
             gbpCurrency,
-            formatter.format(gbpRate.toBigDecimal()),
+            formatter.format(formatter.parseOrZero(timesString) * gbpRate.toBigDecimal()),
             "British Pound",
             R.drawable.flag_gbp
         )
 
-    val usdCurrencyRateModel =
+    fun usdCurrencyRateModel(timesString: String = "1") =
         CurrencyRateModel(
             usdCurrency,
-            formatter.format(usdRate.toBigDecimal()),
+            formatter.format(formatter.parseOrZero(timesString) * usdRate.toBigDecimal()),
             "United States Dollar",
             R.drawable.flag_usd)
 
@@ -146,18 +145,27 @@ object TestData {
             R.drawable.flag_usd)
 
     val currencyRatesModel = listOf(
-        eurCurrencyRateModel,
-        usdCurrencyRateModel,
-        gbpCurrencyRateModel
+        eurCurrencyRateModel(),
+        usdCurrencyRateModel(),
+        gbpCurrencyRateModel()
+    )
+
+    fun currencyRatesModelAdjusted(timesString: String) = listOf(
+        eurCurrencyRateModel(timesString),
+        usdCurrencyRateModel(timesString),
+        gbpCurrencyRateModel(timesString)
     )
 
     val currencyRatesModel2 = listOf(
+        gbpCurrencyRateModel2,
         eurCurrencyRateModel2,
-        usdCurrencyRateModel2,
-        gbpCurrencyRateModel2
+        usdCurrencyRateModel2
     )
 
     val currencyRatesAvailableFresh = CurrencyRatesState.Loaded(currencyRatesModel)
+
+    fun currencyRatesAvailableFreshAdjusted(timesString: String) =
+        CurrencyRatesState.Loaded(currencyRatesModelAdjusted(timesString))
 
     val currencyRatesAvailableFresh2 = CurrencyRatesState.Loaded(currencyRatesModel2)
 
@@ -168,6 +176,23 @@ object TestData {
             R.string.stale_currency_rates.toArgedText(),
             R.drawable.ic_error_outline_white_48dp)
     )
+
+    val currencyRatesAvailableStaleNetworkIssue2 = CurrencyRatesState.Loaded(
+        currencyRatesModel2,
+        CurrencyRatesListHint(
+            R.string.issue_network.toArgedText(),
+            R.string.stale_currency_rates.toArgedText(),
+            R.drawable.ic_error_outline_white_48dp)
+    )
+
+    fun currencyRatesAvailableStaleNetworkIssueAdjusted(timesString: String) =
+        CurrencyRatesState.Loaded(
+            currencyRatesModelAdjusted(timesString),
+            CurrencyRatesListHint(
+                R.string.issue_network.toArgedText(),
+                R.string.stale_currency_rates.toArgedText(),
+                R.drawable.ic_error_outline_white_48dp)
+        )
 
     val currencyRatesNotAvailableGenericIssue = CurrencyRatesState.Loaded(
         hint =

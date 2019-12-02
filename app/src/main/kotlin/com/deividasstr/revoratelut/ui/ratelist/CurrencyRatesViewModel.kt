@@ -23,6 +23,8 @@ import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -37,7 +39,11 @@ class CurrencyRatesViewModel(
     private val calculator: Calculator
 ) : ViewModel() {
 
-    private val baseCurrencyValueTickler by lazy {
+    private val baseCurrencyChannel by lazy {
+        ConflatedBroadcastChannel(sharedPrefs.baseCurrency())
+    }
+
+    private val baseCurrencyValueTicklerChannel by lazy {
         ConflatedBroadcastChannel(Unit)
     }
 
@@ -45,55 +51,98 @@ class CurrencyRatesViewModel(
         AtomicReference<BigDecimal>(sharedPrefs.baseCurrencyValue())
     }
 
-    /*
-    * Main data source for Activity. Debounce, add rate to baseCurrencyChannel or
-    */
     fun currencyRatesLive(): LiveData<CurrencyRatesState> {
-        val baseCurrencyTicklerFlow = baseCurrencyValueTickler.asFlow()
-        return currencyRatesRepo.currencyRatesResultFlow(sharedPrefs.baseCurrency())
+        val baseCurrencyTicklerFlow = baseCurrencyValueTicklerChannel.asFlow()
+        return baseCurrencyChannel.asFlow()
+            .flatMapLatest { currency ->
+                currencyRatesRepo.currencyRatesResultFlow(currency)
+                    .map { it to currency }
+            }
             .distinctUntilChanged()
-            .combine(baseCurrencyTicklerFlow, ::generateState)
+            .map(::moveBaseCurrencyTop)
+            .combine(baseCurrencyTicklerFlow, ::recalculateRates)
+            .map(::generateState)
             .onStart { emit(CurrencyRatesState.Loading) }
             .asLiveData(Dispatchers.IO)
     }
 
-    //TODO: refactor - sealed class contains values
-    private suspend fun generateState(
-        currencyRatesResult: CurrencyRatesResult,
+    private suspend fun moveBaseCurrencyTop(ratesToCurrency: Pair<CurrencyRatesResult, Currency>
+    ): Pair<CurrencyRatesResult, Currency> {
+        val result = ratesToCurrency.first
+        if (result.currencyRates == null) return ratesToCurrency
+
+        val selectedCurrency = ratesToCurrency.second
+        val currencies = result.currencyRates!!.toMutableList()
+        val baseCurrencyIndex = currencies.indexOfFirst { it.currency == selectedCurrency }
+        val baseCurrencyWithRate = currencies.removeAt(baseCurrencyIndex)
+        currencies.add(0, baseCurrencyWithRate)
+
+        return result.rewrapNewRates(currencies) to selectedCurrency
+    }
+
+    private suspend fun recalculateRates(
+        resultToCurrency: Pair<CurrencyRatesResult, Currency>,
         tickler: Unit
-    ): CurrencyRatesState {
-        return when (currencyRatesResult) {
-            is CurrencyRatesResult.NoResults -> {
-                val error = currencyRatesResult.networkFailure.toErrorRes().toArgedText()
-                val consequence = R.string.no_currency_rates.toArgedText()
-                CurrencyRatesState.Loaded(
-                    hint = CurrencyRatesListHint(
-                        error,
-                        consequence,
-                        R.drawable.ic_error_outline_white_48dp)
-                )
-            }
+    ): CurrencyRatesResult {
+        if (resultToCurrency.first.currencyRates == null) return resultToCurrency.first
 
-            is CurrencyRatesResult.StaleResult -> with(currencyRatesResult) {
-                val error = networkFailure.toErrorRes().toArgedText()
-                val consequence = R.string.stale_currency_rates.toArgedText()
+        val currencyRates = resultToCurrency.first.currencyRates!!
+        val currency = resultToCurrency.second
+        val baseCurrencyRate = getBaseCurrencyRate(currencyRates, currency)
+        val multiplier = baseCurrencyValue.get()!!
 
-                CurrencyRatesState.Loaded(
-                    currencyRates.toModel(),
-                    CurrencyRatesListHint(
-                        error,
-                        consequence,
-                        R.drawable.ic_error_outline_white_48dp
-                    )
-                )
-            }
+        val adjustedRates = currencyRates.adjustRates(baseCurrencyRate, multiplier)
 
-            is CurrencyRatesResult.FreshResult -> CurrencyRatesState.Loaded(
-                currencyRatesResult.currencyRates.toModel())
+        return resultToCurrency.first.rewrapNewRates(adjustedRates)
+    }
 
-            is CurrencyRatesResult.InitialResult -> CurrencyRatesState.Loaded(
-                currencyRatesResult.currencyRates.toModel())
+    private fun List<CurrencyWithRate>.adjustRates(
+        baseCurrencyRate: BigDecimal,
+        multiplier: BigDecimal
+    ): List<CurrencyWithRate> {
+        return map {
+            val adjustedRate = calculator.divide(it.rate, baseCurrencyRate)
+            val multipliedRate = calculator.multiply(adjustedRate, multiplier)
+            it.copy(rate = multipliedRate)
         }
+    }
+
+    private suspend fun generateState(currencyRatesResult: CurrencyRatesResult): CurrencyRatesState {
+        val error = errorFromResult(currencyRatesResult)?.toErrorRes()?.toArgedText()
+        val consequence = consequenceFromResult(currencyRatesResult)?.toArgedText()
+        val hint = if (error != null && consequence != null) {
+            CurrencyRatesListHint(
+                error,
+                consequence,
+                R.drawable.ic_error_outline_white_48dp)
+        } else null
+
+        val currencyRates = currencyRatesResult.currencyRates?.toModel()
+
+        return CurrencyRatesState.Loaded(currencyRates, hint)
+    }
+
+    private fun errorFromResult(currencyRatesResult: CurrencyRatesResult): RemoteFailure? {
+        return when (currencyRatesResult) {
+            is CurrencyRatesResult.NoResults -> currencyRatesResult.networkFailure
+            is CurrencyRatesResult.StaleResult -> currencyRatesResult.networkFailure
+            else -> null
+        }
+    }
+
+    private fun consequenceFromResult(currencyRatesResult: CurrencyRatesResult): Int? {
+        return when (currencyRatesResult) {
+            is CurrencyRatesResult.NoResults -> R.string.no_currency_rates
+            is CurrencyRatesResult.StaleResult -> R.string.stale_currency_rates
+            else -> null
+        }
+    }
+
+    private fun getBaseCurrencyRate(
+        currenciesWithRates: List<CurrencyWithRate>,
+        baseCurrency: Currency
+    ): BigDecimal {
+        return currenciesWithRates.find { it.currency == baseCurrency }!!.rate
     }
 
     private fun RemoteFailure.toErrorRes(): Int {
@@ -109,10 +158,9 @@ class CurrencyRatesViewModel(
 
     private fun CurrencyWithRate.toModel(): CurrencyRateModel {
         val currencyDetails = currencyHelper.getCurrencyDetails(currency.currencyCode)
-        val adjustedRate = calculator.multiply(rate, baseCurrencyValue.get())
         return CurrencyRateModel(
             currency,
-            numberFormatter.format(adjustedRate),
+            numberFormatter.format(rate),
             currencyDetails.currencyName,
             currencyDetails.currencyFlag
         )
@@ -128,7 +176,7 @@ class CurrencyRatesViewModel(
             sharedPrefs.setBaseCurrency(currency)
 
             baseCurrencyValue.set(parsedRate)
-            currencyRatesRepo.setBaseCurrency(currency)
+            baseCurrencyChannel.send(currency)
         }
     }
 
@@ -137,7 +185,7 @@ class CurrencyRatesViewModel(
             val parsedRate = numberFormatter.parseOrZero(newBaseRate)
             sharedPrefs.setBaseCurrencyValue(parsedRate)
             baseCurrencyValue.set(parsedRate)
-            baseCurrencyValueTickler.send(Unit)
+            baseCurrencyValueTicklerChannel.send(Unit)
         }
     }
 }

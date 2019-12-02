@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -45,22 +46,23 @@ class CurrencyRatesViewModelTest {
     }
 
     @Test
-    fun `when no results due to network and no cache, should load and then return proper reason`() {
-        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
-            CurrencyRatesResult.NoResults(RemoteFailure.NetworkFailure)
-        ).onEach { delay(20) }
+    fun `when no results due to network and no cache, should load and then return proper reason`() =
+        runBlockingTest {
+            every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
+                CurrencyRatesResult.NoResults(RemoteFailure.NetworkFailure)
+            ).onEach { delay(20) }
 
-        val expected = TestData.currencyRatesNotAvailableNetworkIssue
-        viewModel.currencyRatesLive()
-            .test()
-            .awaitValue()
-            .assertValue(CurrencyRatesState.Loading)
-            .awaitNextValue()
-            .assertValue(expected)
-    }
+            val expected = TestData.currencyRatesNotAvailableNetworkIssue
+            viewModel.currencyRatesLive()
+                .test()
+                .awaitValue()
+                .assertValue(CurrencyRatesState.Loading)
+                .awaitNextValue()
+                .assertValue(expected)
+        }
 
     @Test
-    fun `when no results due to generic issue, should return proper reason`() {
+    fun `when no results due to generic issue, should return proper reason`() = runBlockingTest {
         every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.NoResults(RemoteFailure.GenericFailure)
         ).onEach { delay(20) }
@@ -75,7 +77,7 @@ class CurrencyRatesViewModelTest {
     }
 
     @Test
-    fun `when no issues, should return fresh list of rates`() {
+    fun `when no issues, should return fresh list of rates`() = runBlockingTest {
         every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
             CurrencyRatesResult.FreshResult(TestData.ratesEurBase)
         ).onEach { delay(20) }
@@ -89,55 +91,77 @@ class CurrencyRatesViewModelTest {
     }
 
     @Test
-    fun `when network issues and cache available, should return stale list of rates with reason`() {
-        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
-            CurrencyRatesResult.StaleResult(TestData.ratesEurBase, RemoteFailure.NetworkFailure)
-        ).onEach { delay(20) }
+    fun `when network issues and cache available, should return stale list of rates with reason`() =
+        runBlockingTest {
+            every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns flowOf(
+                CurrencyRatesResult.StaleResult(TestData.ratesEurBase, RemoteFailure.NetworkFailure)
+            ).onEach { delay(20) } // Due to high speed LOADING state might not appear
 
-        viewModel.currencyRatesLive()
-            .test()
-            .awaitValue()
-            .assertValue(CurrencyRatesState.Loading)
-            .awaitNextValue()
-            .assertValue(TestData.currencyRatesAvailableStaleNetworkIssue)
-    }
+            viewModel.currencyRatesLive()
+                .test()
+                .awaitValue()
+                .assertValue(CurrencyRatesState.Loading)
+                .awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableStaleNetworkIssue)
+        }
 
     @Test
-    fun `when setting new base currency, should cache currency`() {
+    fun `when setting new base currency, should cache currency`() = runBlockingTest {
         viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate.toString())
 
         coVerify { sharedPrefs.setBaseCurrency(TestData.gbpCurrency) }
     }
 
     @Test
-    fun `when setting new base currency and rate value, should return new list of rates`() {
-        every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returnsMany listOf(
-            flowOf(
-                CurrencyRatesResult.FreshResult(TestData.ratesEurBase),
-                CurrencyRatesResult.FreshResult(TestData.ratesGbpBase)
-            ).onEach { delay(20) } // Too fast otherwise
-        )
+    fun `when setting new base currency and rate value, should return new list of rates`() =
+        runBlockingTest {
+            every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns
+                flowOf(CurrencyRatesResult.FreshResult(TestData.ratesEurBase))
+                    .onEach { delay(20) } // Due to high speed LOADING state might not appear
 
-        val currencyRatesLive = viewModel.currencyRatesLive()
-            .test()
-            .awaitValue()
-            .assertValue(CurrencyRatesState.Loading)
-            .awaitNextValue()
-            .assertValue(TestData.currencyRatesAvailableFresh)
+            every { repo.currencyRatesResultFlow(TestData.gbpCurrency) } returns
+                flowOf(CurrencyRatesResult.FreshResult(TestData.ratesGbpBase))
+            val currencyRatesLive = viewModel.currencyRatesLive()
+                .test()
+                .awaitValue()
+                .assertValue(CurrencyRatesState.Loading)
+                .awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableFresh)
 
-        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.currencyInputValue)
+            viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.currencyInputValue)
 
-        currencyRatesLive.awaitNextValue()
-            .assertValue(TestData.currencyRatesAvailableFresh2)
-    }
+            currencyRatesLive.awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableFresh2)
+        }
 
     @Test
-    fun `when setting new base currency, should cache rate`() {
+    fun `when setting new base rate value, should return list with updated rates`() =
+        runBlockingTest {
+            every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns
+                flowOf(CurrencyRatesResult.FreshResult(TestData.ratesEurBase))
+                    .onEach { delay(20) } // Due to high speed LOADING state might not appear
+
+            val currencyRatesLive = viewModel.currencyRatesLive()
+                .test()
+                .awaitValue()
+                .assertValue(CurrencyRatesState.Loading)
+                .awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableFresh)
+
+            viewModel.changeBaseCurrencyRate(TestData.currencyInputValue)
+
+            currencyRatesLive.awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableFreshAdjusted(TestData.currencyInputValue))
+        }
+
+    @Test
+    fun `when setting new base currency, should cache rate`() = runBlockingTest {
         viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate.toString())
 
         coVerify { sharedPrefs.setBaseCurrencyValue(TestData.eurRate.toBigDecimal()) }
     }
 
+    //TODO: investigate the reason of test flakiness (not the same dispatcher?)
     @Test
     fun `when setting new base currency rate, should cache`() {
         viewModel.changeBaseCurrencyRate(TestData.eurRate.toString())
@@ -146,9 +170,57 @@ class CurrencyRatesViewModelTest {
     }
 
     @Test
-    fun `when setting new base currency, should set in repo`() {
-        viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.eurRate.toString())
+    fun `when stale data and setting new base currency and rate value, should return updated list of rates`() =
+        testCoroutine.testDispatcher.runBlockingTest {
+            every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns
+                flowOf(
+                    CurrencyRatesResult.StaleResult(
+                        TestData.ratesEurBase,
+                        RemoteFailure.NetworkFailure)
+                ).onEach { delay(20) } // Due to high speed LOADING state might not appear
 
-        coVerify { repo.setBaseCurrency(TestData.gbpCurrency) }
-    }
+            every { repo.currencyRatesResultFlow(TestData.gbpCurrency) } returns
+                flowOf(
+                    CurrencyRatesResult.StaleResult(
+                        TestData.ratesGbpBase,
+                        RemoteFailure.NetworkFailure)
+                )
+
+            val currencyRatesLive = viewModel.currencyRatesLive()
+                .test()
+                .awaitValue()
+                .assertValue(CurrencyRatesState.Loading)
+                .awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableStaleNetworkIssue)
+
+            viewModel.changeBaseCurrency(TestData.gbpCurrency, TestData.currencyInputValue)
+
+            currencyRatesLive.awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableStaleNetworkIssue2)
+        }
+
+    @Test
+    fun `when stale data and setting new base rate value, should return updated list of rates`() {
+            every { repo.currencyRatesResultFlow(TestData.eurCurrency) } returns
+                flowOf(
+                    CurrencyRatesResult.StaleResult(
+                        TestData.ratesEurBase,
+                        RemoteFailure.NetworkFailure)
+                ).onEach { delay(20) } // Due to high speed LOADING state might not appear
+
+            val currencyRatesLive = viewModel.currencyRatesLive()
+                .test()
+                .awaitValue()
+                .assertValue(CurrencyRatesState.Loading)
+                .awaitNextValue()
+                .assertValue(TestData.currencyRatesAvailableStaleNetworkIssue)
+
+            viewModel.changeBaseCurrencyRate(TestData.currencyInputValue)
+
+            currencyRatesLive.awaitNextValue()
+                .assertValue(
+                    TestData.currencyRatesAvailableStaleNetworkIssueAdjusted(
+                        TestData.currencyInputValue
+                    ))
+        }
 }

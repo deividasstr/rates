@@ -8,7 +8,7 @@ sealed class CurrencyRatesState {
     object Loading : CurrencyRatesState()
 
     data class Loaded(
-        val rates: List<CurrencyRateModel> = emptyList(),
+        val rates: List<CurrencyRateModel>? = null,
         val hint: CurrencyRatesListHint? = null
     ) : CurrencyRatesState()
 }

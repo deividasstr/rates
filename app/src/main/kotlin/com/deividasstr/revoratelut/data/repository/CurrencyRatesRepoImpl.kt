@@ -5,10 +5,8 @@ import com.deividasstr.revoratelut.data.network.NetworkResultWrapper
 import com.deividasstr.revoratelut.data.storage.CurrencyRatesStorage
 import com.deividasstr.revoratelut.domain.Currency
 import com.deividasstr.revoratelut.domain.CurrencyWithRate
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -18,27 +16,18 @@ class CurrencyRatesRepoImpl(
     private val currencyRatesStorage: CurrencyRatesStorage
 ) : CurrencyRatesRepo {
 
-    private lateinit var baseCurrencyChannel: ConflatedBroadcastChannel<Currency>
+    private var firstEmit = true
 
     override fun currencyRatesResultFlow(baseCurrency: Currency): Flow<CurrencyRatesResult> {
-        baseCurrencyChannel = ConflatedBroadcastChannel(baseCurrency)
-        return baseCurrencyChannel.asFlow()
-            .flatMapLatest {
-                currencyRatesNetworkSource.getCurrencyRatesFlow(it)
-            }
-            .map { tryAddBaseCurrency(it, baseCurrencyChannel.value) }
+        return currencyRatesNetworkSource.getCurrencyRatesFlow(baseCurrency)
+            .map { tryAddBaseCurrency(it, baseCurrency) }
             .onEach { if (it is NetworkResultWrapper.Success) cacheResult(it.value) }
             .map(::networkCurrenciesToCurrencyRatesModel)
-            .onStart {
-                val cache = currencyRatesStorage.getCurrencyRates()
-                emit(CurrencyRatesResult.InitialResult(cache))
-            }
+            .onStart(::emitCache)
     }
 
-    override suspend fun setBaseCurrency(baseCurrency: Currency) {
-        baseCurrencyChannel.send(baseCurrency)
-    }
-
+    // Added in repo - if it is only added in the viewmodel, changing the base currency would lose
+    //the original unknown currency in offline mode
     private fun tryAddBaseCurrency(
         result: NetworkResultWrapper<List<CurrencyWithRate>>,
         baseCurrency: Currency): NetworkResultWrapper<List<CurrencyWithRate>> {
@@ -85,6 +74,14 @@ class CurrencyRatesRepoImpl(
             is NetworkResultWrapper.GenericError -> RemoteFailure.GenericFailure
             NetworkResultWrapper.NetworkError -> RemoteFailure.NetworkFailure
             else -> throw IllegalArgumentException("Unknown network result failure $result")
+        }
+    }
+
+    private suspend fun emitCache(collector: FlowCollector<CurrencyRatesResult>) {
+        if (firstEmit) {
+            firstEmit = false
+            val cache = currencyRatesStorage.getCurrencyRates()
+            collector.emit(CurrencyRatesResult.InitialResult(cache))
         }
     }
 }

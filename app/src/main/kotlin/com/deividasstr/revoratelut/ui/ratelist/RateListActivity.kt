@@ -32,7 +32,6 @@ class RateListActivity : AppCompatActivity() {
 
     private val quantityFocusListener = { currency: Currency, rate: String ->
         viewModel.changeBaseCurrency(currency, rate)
-        //viewModel.changeBaseCurrencyRate(rate)
     }
 
     private val currencyAdapter by lazy {
@@ -81,7 +80,8 @@ class RateListActivity : AppCompatActivity() {
     private fun loadedStateToItems(
         currencyRatesState: CurrencyRatesState.Loaded
     ): List<ListItem> {
-        return listOfNotNull(currencyRatesState.hint).plus(currencyRatesState.rates)
+        return listOfNotNull(currencyRatesState.hint)
+            .plus(currencyRatesState.rates ?: emptyList())
     }
 
     private fun currencyRatesModelDelegate(
