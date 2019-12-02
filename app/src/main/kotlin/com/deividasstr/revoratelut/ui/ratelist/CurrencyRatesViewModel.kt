@@ -39,28 +39,28 @@ class CurrencyRatesViewModel(
     private val calculator: Calculator
 ) : ViewModel() {
 
-    private val baseCurrencyChannel by lazy {
+    private val selectedCurrencyChannel by lazy {
         ConflatedBroadcastChannel(sharedPrefs.baseCurrency())
     }
 
-    private val baseCurrencyValueTicklerChannel by lazy {
+    private val selectedCurrencyValueTicklerChannel by lazy {
         ConflatedBroadcastChannel(Unit)
     }
 
-    private val baseCurrencyValue by lazy {
+    private val selectedCurrencyValue by lazy {
         AtomicReference<BigDecimal>(sharedPrefs.baseCurrencyValue())
     }
 
     fun currencyRatesLive(): LiveData<CurrencyRatesState> {
-        val baseCurrencyTicklerFlow = baseCurrencyValueTicklerChannel.asFlow()
-        return baseCurrencyChannel.asFlow()
+        val selectedCurrencyTicklerFlow = selectedCurrencyValueTicklerChannel.asFlow()
+        return selectedCurrencyChannel.asFlow()
             .flatMapLatest { currency ->
                 currencyRatesRepo.currencyRatesResultFlow(currency)
                     .map { it to currency }
             }
             .distinctUntilChanged()
             .map(::moveBaseCurrencyTop)
-            .combine(baseCurrencyTicklerFlow, ::recalculateRates)
+            .combine(selectedCurrencyTicklerFlow, ::recalculateRates)
             .map(::generateState)
             .onStart { emit(CurrencyRatesState.Loading) }
             .asLiveData(Dispatchers.IO)
@@ -89,7 +89,7 @@ class CurrencyRatesViewModel(
         val currencyRates = resultToCurrency.first.currencyRates!!
         val currency = resultToCurrency.second
         val baseCurrencyRate = getBaseCurrencyRate(currencyRates, currency)
-        val multiplier = baseCurrencyValue.get()!!
+        val multiplier = selectedCurrencyValue.get()!!
 
         val adjustedRates = currencyRates.adjustRates(baseCurrencyRate, multiplier)
 
@@ -175,8 +175,8 @@ class CurrencyRatesViewModel(
             sharedPrefs.setBaseCurrencyValue(parsedRate)
             sharedPrefs.setBaseCurrency(currency)
 
-            baseCurrencyValue.set(parsedRate)
-            baseCurrencyChannel.send(currency)
+            selectedCurrencyValue.set(parsedRate)
+            selectedCurrencyChannel.send(currency)
         }
     }
 
@@ -184,8 +184,8 @@ class CurrencyRatesViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             val parsedRate = numberFormatter.parseOrZero(newBaseRate)
             sharedPrefs.setBaseCurrencyValue(parsedRate)
-            baseCurrencyValue.set(parsedRate)
-            baseCurrencyValueTicklerChannel.send(Unit)
+            selectedCurrencyValue.set(parsedRate)
+            selectedCurrencyValueTicklerChannel.send(Unit)
         }
     }
 }
